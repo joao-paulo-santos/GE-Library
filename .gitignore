@@ -1,0 +1,8 @@
+*
+
+!.gitignore
+!README.md
+!python/
+!python/**
+!testing_goals/
+!testing_goals/**
