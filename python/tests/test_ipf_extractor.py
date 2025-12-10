@@ -109,20 +109,18 @@ class TestFilenameDecryption(TestIPFExtractor):
 
     def test_decode_filename_from_local_header(self, test_ipf_file):
         """Test filename decryption from IPF local header"""
-        with open(test_ipf_file, 'rb') as f:
-            ipf_data = f.read()
-
         # Read the ZIP structure to find file info
         import zipfile
-        import io
 
-        with zipfile.ZipFile(io.BytesIO(ipf_data), 'r') as zip_file:
+        with zipfile.ZipFile(test_ipf_file, 'r') as zip_file:
             file_infos = zip_file.infolist()
             assert len(file_infos) > 0
 
             # Test filename decryption for first file
             first_file = file_infos[0]
-            decoded_name = decode_filename_from_local_header(ipf_data, first_file)
+            # Reopen file for filename reading (as our function expects a file handle)
+            with open(test_ipf_file, 'rb') as file:
+                decoded_name = decode_filename_from_local_header(file, first_file)
 
             # Should decode to a reasonable filename
             assert decoded_name is not None

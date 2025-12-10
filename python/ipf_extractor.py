@@ -94,28 +94,35 @@ class ZipCipher:
             self.update_keys(decrypted_byte)
         return bytes(decrypted)
 
-def decode_filename_from_local_header(ipf_data, file_info):
+def read_file_chunk(file, offset, size):
+    """Read a specific chunk from file efficiently"""
+    file.seek(offset)
+    return file.read(size)
+
+def decode_filename_from_local_header(file, file_info):
     """
-    Extract and decrypt the filename from the local file header
+    Extract and decrypt the filename from the local file header using streaming
     """
     local_header_offset = file_info.header_offset
 
-    # Read local file header
-    if local_header_offset + 30 > len(ipf_data):
+    # Get filename length from local header
+    name_len_offset = local_header_offset + 26  # Filename length offset
+    name_len_bytes = read_file_chunk(file, name_len_offset, 2)
+
+    if len(name_len_bytes) != 2:
         return None
 
-    # Verify signature
-    signature = struct.unpack('<I', ipf_data[local_header_offset:local_header_offset+4])[0]
-    if signature != 0x04034b50:  # Local file header signature
+    name_len = struct.unpack('<H', name_len_bytes)[0]
+
+    if name_len == 0 or name_len > 512:  # Reasonable filename length limit
         return None
 
-    # Get filename length
-    name_len = struct.unpack('<H', ipf_data[local_header_offset+26:local_header_offset+28])[0]
-    if name_len == 0 or local_header_offset + 30 + name_len > len(ipf_data):
-        return None
+    # Read encrypted filename
+    filename_offset = local_header_offset + 30  # After local header
+    encrypted_name = read_file_chunk(file, filename_offset, name_len)
 
-    # Extract encrypted filename
-    encrypted_name = ipf_data[local_header_offset+30:local_header_offset+30+name_len]
+    if len(encrypted_name) != name_len:
+        return None
 
     # Decrypt using ZIP cipher
     cipher = ZipCipher()
@@ -171,6 +178,31 @@ def process_ipf_file(ipf_path, output_dir="extracted"):
     """
     print(f"Processing '{ipf_path}'...")
 
+    if not os.path.exists(ipf_path):
+        print(f"Error: IPF file not found: '{ipf_path}'")
+        return False
+
+    # Check file size
+    file_size = os.path.getsize(ipf_path)
+
+    # Check available disk space (if possible)
+    try:
+        import shutil
+        stat = shutil.disk_usage(output_dir if os.path.exists(output_dir) else os.path.dirname(output_dir))
+        available_space_gb = stat.free / (1024**3)
+
+        if file_size > stat.free:
+            print(f"❌ ERROR: Not enough disk space!")
+            print(f"   Required: {file_size/(1024**3):.1f} GB")
+            print(f"   Available: {available_space_gb:.1f} GB")
+            return False
+        elif file_size * 1.4 > stat.free:  # Leave 40% margin
+            print(f"⚠️  WARNING: Low disk space!")
+            print(f"   Required: {file_size/(1024**3):.1f} GB")
+            print(f"   Available: {available_space_gb:.1f} GB")
+    except:
+        print("⚠️  Cannot check disk space availability")
+
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
 
@@ -178,59 +210,71 @@ def process_ipf_file(ipf_path, output_dir="extracted"):
     password = get_ipf_password()
     print(f"Using static password: {password.hex()}")
 
-    # Read the entire IPF file into memory
-    with open(ipf_path, 'rb') as f:
-        ipf_data = f.read()
-
     try:
-        with zipfile.ZipFile(io.BytesIO(ipf_data), 'r') as ipf_zip:
-            print(f"Found {len(ipf_zip.infolist())} files in archive")
+        # Memory-efficient: Open file directly and let zipfile work with it
+        with open(ipf_path, 'rb') as file:
+            with zipfile.ZipFile(file) as ipf_zip:
+                print(f"Found {len(ipf_zip.infolist())} files in archive")
 
-            for i, file_info in enumerate(ipf_zip.infolist()):
-                try:
-                    print(f"\n[{i+1}/{len(ipf_zip.infolist())}] Processing file...")
-
-                    # Try to decode filename from local header
-                    decoded_filename = decode_filename_from_local_header(ipf_data, file_info)
-                    if decoded_filename:
-                        print(f"Decoded filename: {decoded_filename}")
-                        safe_filename = make_safe_filename(decoded_filename)
-                    else:
-                        print("Could not decode filename, using fallback")
-                        safe_filename = f"file_{i:04d}.bin"
-
-                    # Create full output path
-                    output_path = os.path.join(output_dir, safe_filename)
-
-                    # If file exists, add a number
-                    counter = 1
-                    base_path = output_path
-                    name, ext = os.path.splitext(base_path)
-                    while os.path.exists(output_path):
-                        output_path = f"{name}_{counter}{ext}"
-                        counter += 1
-
-                    # Extract the file using the static password
-                    print(f"Extracting to: {output_path}")
-                    with ipf_zip.open(file_info, pwd=password) as member_file:
-                        with open(output_path, 'wb') as output_file:
-                            output_file.write(member_file.read())
-
-                    print(f"✓ Successfully extracted: {safe_filename} ({file_info.file_size} bytes)")
-
-                except Exception as e:
-                    print(f"✗ Failed to extract file: {e}")
-                    # Try fallback extraction
+                for i, file_info in enumerate(ipf_zip.infolist()):
                     try:
-                        fallback_name = f"fallback_{i:04d}.bin"
-                        fallback_path = os.path.join(output_dir, fallback_name)
-                        with ipf_zip.open(file_info, pwd=password) as member_file:
-                            with open(fallback_path, 'wb') as output_file:
-                                output_file.write(member_file.read())
-                        print(f"✓ Fallback extraction: {fallback_name}")
-                    except Exception as fallback_error:
-                        print(f"✗ Fallback also failed: {fallback_error}")
-                    continue
+                        print(f"\n[{i+1}/{len(ipf_zip.infolist())}] Processing file...")
+
+                        # Try to decode filename from local header using streaming
+                        # Reopen file for filename reading (since zipfile position is advanced)
+                        with open(ipf_path, 'rb') as filename_file:
+                            decoded_filename = decode_filename_from_local_header(filename_file, file_info)
+                            if decoded_filename:
+                                print(f"Decoded filename: {decoded_filename}")
+                                safe_filename = make_safe_filename(decoded_filename)
+                            else:
+                                print("Could not decode filename, using fallback")
+                                safe_filename = f"file_{i:04d}.bin"
+
+                            # Create full output path
+                            output_path = os.path.join(output_dir, safe_filename)
+
+                            # If file exists, add a number
+                            counter = 1
+                            base_path = output_path
+                            name, ext = os.path.splitext(base_path)
+                            while os.path.exists(output_path):
+                                output_path = f"{name}_{counter}{ext}"
+                                counter += 1
+
+                            # Extract the file using the static password with streaming
+                            print(f"Extracting to: {output_path}")
+                            with ipf_zip.open(file_info, pwd=password) as member_file:
+                                with open(output_path, 'wb') as output_file:
+                                    # Stream the file in chunks to handle large files
+                                    buffer_size = 8192  # 8KB buffer
+                                    while True:
+                                        chunk = member_file.read(buffer_size)
+                                        if not chunk:
+                                            break
+                                        output_file.write(chunk)
+
+                        print(f"✓ Successfully extracted: {safe_filename} ({file_info.file_size} bytes)")
+
+                    except Exception as e:
+                        print(f"✗ Failed to extract file: {e}")
+                        # Try fallback extraction with streaming
+                        try:
+                            fallback_name = f"fallback_{i:04d}.bin"
+                            fallback_path = os.path.join(output_dir, fallback_name)
+                            with ipf_zip.open(file_info, pwd=password) as member_file:
+                                with open(fallback_path, 'wb') as output_file:
+                                    # Stream with buffer for large files
+                                    buffer_size = 8192
+                                    while True:
+                                        chunk = member_file.read(buffer_size)
+                                        if not chunk:
+                                            break
+                                        output_file.write(chunk)
+                            print(f"✓ Fallback extraction: {fallback_name}")
+                        except Exception as fallback_error:
+                            print(f"✗ Fallback also failed: {fallback_error}")
+                        continue
 
         print(f"\n✓ Extraction completed! Files saved to: {output_dir}")
         return True
