@@ -3,6 +3,7 @@ import os
 import zipfile
 import struct
 import io
+import time
 
 def get_ipf_password():
     """
@@ -172,7 +173,7 @@ def make_safe_filename(filename):
 
     return safe
 
-def process_ipf_file(ipf_path, output_dir="extracted"):
+def process_ipf_file(ipf_path, output_dir="extracted", verbose=False):
     """
     Extract IPF file with proper filename decryption
     """
@@ -208,28 +209,55 @@ def process_ipf_file(ipf_path, output_dir="extracted"):
 
     # Get the static IPF password
     password = get_ipf_password()
-    print(f"Using static password: {password.hex()}")
+    if verbose:
+        print(f"Using static password: {password.hex()}")
+
+    # Smart progress tracking setup
+    start_time = time.time()
+    last_log_time = start_time
+
+    # Calculate smart logging intervals
+    def should_log_progress(current, total):
+        """Determine if we should log progress at this point"""
+        # Always log at designated percentage milestones
+        if total < 1000:  # Small files: every 20%
+            return (current % max(100, int(total * 0.2)) == 0) or current == total
+        elif total < 10000:  # Medium files: every 10%
+            return (current % max(500, int(total * 0.1)) == 0) or current == total
+        else:  # Large files: every 5%
+            return (current % max(1000, int(total * 0.05)) == 0) or current == total
 
     try:
         # Memory-efficient: Open file directly and let zipfile work with it
         with open(ipf_path, 'rb') as file:
             with zipfile.ZipFile(file) as ipf_zip:
-                print(f"Found {len(ipf_zip.infolist())} files in archive")
+                file_infos = ipf_zip.infolist()
+                print(f"Found {len(file_infos)} files in archive")
 
-                for i, file_info in enumerate(ipf_zip.infolist()):
+                for i, file_info in enumerate(file_infos):
                     try:
-                        print(f"\n[{i+1}/{len(ipf_zip.infolist())}] Processing file...")
+                        # Smart progress logging - based on file count and time
+                        current_time = time.time()
+                        if not verbose and (should_log_progress(i + 1, len(file_infos)) or
+                                          current_time - last_log_time >= 3.0):
+                            elapsed = current_time - start_time
+                            rate = (i + 1) / elapsed if elapsed > 0 else 0
+                            eta = (len(file_infos) - i - 1) / rate if rate > 0 else 0
+                            percent = ((i + 1) / len(file_infos)) * 100
+                            sys.stdout.write(f"\rProgress: {i+1}/{len(file_infos)} "
+                                           f"({percent:.1f}%) - {rate:.0f} files/sec, ETA: {eta:.0f}s")
+                            sys.stdout.flush()
+                            last_log_time = current_time
+                        elif verbose:
+                            print(f"\n[{i+1}/{len(file_infos)}] Processing file...")
 
                         # Try to decode filename from local header using streaming
                         # Reopen file for filename reading (since zipfile position is advanced)
                         with open(ipf_path, 'rb') as filename_file:
                             decoded_filename = decode_filename_from_local_header(filename_file, file_info)
-                            if decoded_filename:
+                            if decoded_filename and verbose:
                                 print(f"Decoded filename: {decoded_filename}")
-                                safe_filename = make_safe_filename(decoded_filename)
-                            else:
-                                print("Could not decode filename, using fallback")
-                                safe_filename = f"file_{i:04d}.bin"
+                            safe_filename = make_safe_filename(decoded_filename) if decoded_filename else f"file_{i:04d}.bin"
 
                             # Create full output path
                             output_path = os.path.join(output_dir, safe_filename)
@@ -243,60 +271,84 @@ def process_ipf_file(ipf_path, output_dir="extracted"):
                                 counter += 1
 
                             # Extract the file using the static password with streaming
-                            print(f"Extracting to: {output_path}")
+                            if verbose:
+                                print(f"Extracting to: {output_path}")
+
                             with ipf_zip.open(file_info, pwd=password) as member_file:
                                 with open(output_path, 'wb') as output_file:
                                     # Stream the file in chunks to handle large files
-                                    buffer_size = 8192  # 8KB buffer
+                                    buffer_size = 65536  # Larger buffer for better performance
                                     while True:
                                         chunk = member_file.read(buffer_size)
                                         if not chunk:
                                             break
                                         output_file.write(chunk)
 
-                        print(f"✓ Successfully extracted: {safe_filename} ({file_info.file_size} bytes)")
+                        if verbose:
+                            print(f"✓ Successfully extracted: {safe_filename} ({file_info.file_size} bytes)")
 
                     except Exception as e:
-                        print(f"✗ Failed to extract file: {e}")
+                        if verbose:
+                            print(f"✗ Failed to extract file: {e}")
                         # Try fallback extraction with streaming
                         try:
                             fallback_name = f"fallback_{i:04d}.bin"
                             fallback_path = os.path.join(output_dir, fallback_name)
                             with ipf_zip.open(file_info, pwd=password) as member_file:
                                 with open(fallback_path, 'wb') as output_file:
-                                    # Stream with buffer for large files
-                                    buffer_size = 8192
+                                    # Stream with larger buffer for large files
+                                    buffer_size = 65536
                                     while True:
                                         chunk = member_file.read(buffer_size)
                                         if not chunk:
                                             break
                                         output_file.write(chunk)
-                            print(f"✓ Fallback extraction: {fallback_name}")
+                            if verbose:
+                                print(f"✓ Fallback extraction: {fallback_name}")
                         except Exception as fallback_error:
-                            print(f"✗ Fallback also failed: {fallback_error}")
-                        continue
+                            if verbose:
+                                print(f"✗ Fallback also failed: {fallback_error}")
+                            continue
 
-        print(f"\n✓ Extraction completed! Files saved to: {output_dir}")
+        # Final progress update
+        elapsed = time.time() - start_time
+        rate = len(file_infos) / elapsed
+        if not verbose:
+            print(f"\r✓ Extraction completed: {len(file_infos)} files in {elapsed:.1f}s ({rate:.0f} files/sec)")
+        else:
+            print(f"\n✓ Extraction completed! Files saved to: {output_dir}")
         return True
 
     except Exception as e:
-        print(f"✗ Failed to process IPF file: {e}")
+        print(f"\n✗ Failed to process IPF file: {e}")
         return False
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python ipf_extractor_final.py <file.ipf> [output_dir]")
+        print("Usage: python ipf_extractor.py <file.ipf> [output_dir] [--verbose|-v]")
         print("\nThis tool extracts IPF files with proper filename decryption.")
+        print("Use --verbose or -v for detailed file-by-file logging")
         sys.exit(1)
 
     ipf_file = sys.argv[1]
-    output_dir = sys.argv[2] if len(sys.argv) > 2 else "extracted_final"
+    output_dir = "extracted"
+    verbose = False
+
+    # Parse arguments
+    i = 2
+    while i < len(sys.argv):
+        arg = sys.argv[i]
+        if arg in ['--verbose', '-v']:
+            verbose = True
+        else:
+            output_dir = arg
+        i += 1
 
     if not os.path.exists(ipf_file):
         print(f"Error: IPF file not found: '{ipf_file}'")
         sys.exit(1)
 
-    success = process_ipf_file(ipf_file, output_dir)
+    success = process_ipf_file(ipf_file, output_dir, verbose)
     sys.exit(0 if success else 1)
 
 if __name__ == "__main__":
