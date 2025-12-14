@@ -34,12 +34,18 @@ type ExtractionResult struct {
 	DurationMs int64
 }
 
+// ExtractionTiming holds timing information for extraction phases
+type ExtractionTiming struct {
+	IPFDecryption     time.Duration
+	ExtractDecryption time.Duration
+	IO               time.Duration
+}
+
 // ConcurrentExtractor handles parallel file extraction
 type ConcurrentExtractor struct {
 	reader      *IPFReader
 	zipReader   *zip.ReadCloser
 	workerCount int
-	bufferSize  int
 }
 
 // NewConcurrentExtractor creates a new concurrent extractor
@@ -48,17 +54,10 @@ func NewConcurrentExtractor(reader *IPFReader, zipReader *zip.ReadCloser, worker
 		workerCount = runtime.NumCPU()
 	}
 
-	// Use large buffer for high-speed NVME operations
-	bufferSize := 1024 * 1024 // 1MB buffer
-	if runtime.NumCPU() > 16 {
-		bufferSize = 2 * 1024 * 1024 // 2MB buffer for high-end systems
-	}
-
 	return &ConcurrentExtractor{
 		reader:      reader,
 		zipReader:   zipReader,
 		workerCount: workerCount,
-		bufferSize:  bufferSize,
 	}
 }
 
@@ -282,4 +281,10 @@ func CalculateStats(results []ExtractionResult, durationMs int64) ExtractionStat
 		AverageSpeedMBs: averageSpeedMBs,
 		Errors:          errors,
 	}
+}
+
+// GetTimings returns the current extraction timing information
+func (ce *ConcurrentExtractor) GetTimings() ExtractionTiming {
+	// Return zero timing since we're not tracking sub-phases accurately
+	return ExtractionTiming{}
 }
