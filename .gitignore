@@ -20,3 +20,19 @@
 # Whitelist benchmarks directory and all its contents
 !benchmarks/
 !benchmarks/**
+
+# Whitelist testing directory structure but exclude proprietary IPF files
+!testing/
+!testing/**.md
+!testing/**.py
+!testing/**.json
+!testing/test_hashes/
+!testing/test_hashes/**
+testing/test_files/
+testing/test_files/
+testing/**/*.ipf
+testing/**/*.zip
+*.zip
+# Exclude temporary extraction directories
+temp_*/
+**/temp_*/
