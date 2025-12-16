@@ -1,0 +1,26 @@
+# Go build artifacts
+ipf-extractor
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test output
+*.test
+*.out
+
+# Vendor directory
+vendor/
+
+# Go workspace file
+go.work
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

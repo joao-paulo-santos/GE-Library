@@ -5,26 +5,17 @@
 !.gitignore
 !README.md
 
-# Whitelist Python directory and all its contents
-!python/
-!python/**
+# Whitelist source directory and all its contents
+!src/
+!src/**
 
 # Whitelist testing goals directory
 !testing_goals/
 !testing_goals/**
 
-# Whitelist Go source files but exclude build artifacts
-!golang/
-!golang/go.mod
-!golang/go.sum
-!golang/Makefile
-!golang/README.md
-!golang/scripts/
-!golang/scripts/**
-!golang/pkg/
-!golang/pkg/**
-!golang/cmd/
-!golang/cmd/**
+# Whitelist documentation directory and all its contents
+!documentation/
+!documentation/**
 
 # Whitelist benchmarks directory and all its contents
 !benchmarks/
