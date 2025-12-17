@@ -19,7 +19,6 @@ import json
 import hashlib
 import os
 import sys
-import time
 import subprocess
 import tempfile
 import shutil
@@ -162,7 +161,6 @@ class HashGenerator:
     def run_iz_exe(self, ipf_path, output_zip_path):
         """Run iz.exe to convert IPF to password-protected ZIP"""
         print(f"Running iz.exe on {ipf_path}...")
-        start_time = time.time()
 
         try:
             # iz.exe creates ZIP in same directory as IPF file
@@ -187,7 +185,6 @@ class HashGenerator:
 
             # Look for generated ZIP file in IPF directory
             if expected_zip.exists():
-                processing_time = (time.time() - start_time) * 1000
                 zip_hash = self.calculate_file_hash(expected_zip)
                 zip_size = expected_zip.stat().st_size
 
@@ -196,7 +193,6 @@ class HashGenerator:
                 shutil.move(str(expected_zip), str(output_zip_path))
 
                 return True, zip_hash, {
-                    "processing_time_ms": processing_time,
                     "output_size": zip_size
                 }
             else:
@@ -213,7 +209,6 @@ class HashGenerator:
     def run_ez_exe(self, zip_path, output_dir):
         """Run ez.exe to extract password-protected ZIP"""
         print(f"Running ez.exe on {zip_path}...")
-        start_time = time.time()
 
         try:
             # ez.exe extracts to same directory as ZIP file
@@ -236,8 +231,6 @@ class HashGenerator:
                     print(f"Return code: {result.returncode}, stderr: {result.stderr}")
                 return False, None
 
-            processing_time = (time.time() - start_time) * 1000
-
             # Calculate hash of the extracted directory
             if extraction_dir.exists():
                 dir_hash = self.calculate_directory_hash(extraction_dir)
@@ -249,7 +242,6 @@ class HashGenerator:
                 extraction_dir.rmdir()
 
                 return True, {
-                    "processing_time_ms": processing_time,
                     "directory_hash": dir_hash
                 }
             else:

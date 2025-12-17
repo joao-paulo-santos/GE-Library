@@ -20,11 +20,20 @@ We validate against three test files from Granado Espada Classique:
 
 #### For Users - Validate Compiled Builds
 ```bash
-# From testing directory - validate compiled extractor against reference hashes
+# From testing directory - validate compiled extractor against reference hashes (runs tool + validates)
 python validate_hashes.py --ipf-path /path/to/project/root
 
 # With detailed output
 python validate_hashes.py --verbose
+
+# For CI/CD - validate pre-existing extraction results against reference hashes
+python validate_results.py --output ./extraction_directory --tool extraction --test-key small
+
+# Validate multiple outputs at once
+python validate_results.py --output-map '{"small": "./small_output", "medium": "./medium_output"}' --tool extraction
+
+# Generate JSON report for automated systems
+python validate_results.py --output ./results --tool extraction --test-key small --report-json validation_report.json --quiet
 ```
 
 #### For Maintainers - Generate Reference Hashes
@@ -45,6 +54,39 @@ python generate_hashes.py [--ipf-path /path/to/ipf/files]
 - **IPF Optimization** (`oz.exe` replication)
 - **IES Conversion** (`ix3.exe` replication)
 - **Folder Addition** (`af.exe` replication)
+
+### Generic Validation Framework
+The new `ToolOutputValidator` class supports validation for all IPF tools:
+
+```python
+# Validate any tool output against reference hashes
+validator = ToolOutputValidator("reference_hashes.json", tool_type="creation")
+result = validator.validate_tool_output("./created.ipf", "small_folder")
+```
+
+### Supported Tool Types
+- **extraction**: Validate directory outputs from IPF extraction
+- **creation**: Validate .ipf files created from folders
+- **optimization**: Validate optimized .ipf files
+- **conversion**: Validate IES to XML/PRN conversion outputs
+- **addition**: Validate .ipf files after adding folders
+
+### CI/CD Integration Examples
+
+```bash
+# Validate IPF creation
+python validate_results.py --output ./new_archive.ipf --tool creation --test-key small_folder
+
+# Validate IES conversion
+python validate_results.py --output ./converted_files --tool conversion --test-key sample_ies
+
+# Validate multiple tool outputs in one pipeline stage
+python validate_results.py --output-map '{
+  "small": "./small_extraction",
+  "medium": "./medium_extraction",
+  "created": "./new_archive.ipf"
+}' --tool extraction --test-key small
+```
 
 Each new tool will follow the same validation pattern: compare against original Windows tools to ensure 100% compatibility.
 
@@ -76,7 +118,9 @@ Verifies consistent behavior across Linux, Windows, and macOS for users who can'
 - `testing/test_hashes/` - Version-controlled hash databases and validation tools
 - `testing/test_hashes/tools/extraction_hashes.json` - Reference hashes from original Windows tools
 - `testing/test_hashes/validation_report.json` - Latest validation results and performance metrics
-- `testing/validate_hashes.py` - Public validation script for compiled builds
+- `testing/validate_hashes.py` - IPF extraction validation script (runs tool + validates)
+- `testing/validate_results.py` - Generic validation script for any tool output (CI/CD compatible)
+- `testing/tool_output_validator.py` - Generic validation class for all IPF tools
 - `testing/generate_hashes.py` - Maintainer script for hash regeneration (Windows: native, Linux/Mac: Wine)
 
 ### Traditional Testing
