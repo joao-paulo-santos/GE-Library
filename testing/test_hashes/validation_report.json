@@ -1,0 +1,41 @@
+{
+  "validation_summary": {
+    "total_files_tested": 3,
+    "successful_validations": 2,
+    "success_rate": 0.6666666666666666,
+    "tool_type": "compiled",
+    "timestamp": "2025-12-17T00:19:43.126389"
+  },
+  "results_summary": {
+    "small": {
+      "test_file": "ai.ipf",
+      "status": "validation_complete",
+      "strategy": "full",
+      "file_count": 4,
+      "total_size": 28871,
+      "perfect_match": true,
+      "processing_time_ms": 4.072427749633789,
+      "speedup_factor": 1045.2074819975412
+    },
+    "medium": {
+      "test_file": "item_texture.ipf",
+      "status": "validation_complete",
+      "strategy": "sampling",
+      "file_count": 3063,
+      "total_size": 258360404,
+      "perfect_match": true,
+      "processing_time_ms": 571.8367099761963,
+      "speedup_factor": 14.844128954573712
+    },
+    "large": {
+      "test_file": "ui.ipf",
+      "status": "validation_complete",
+      "strategy": "sampling",
+      "file_count": 11567,
+      "total_size": 741705839,
+      "perfect_match": false,
+      "processing_time_ms": 3977.863311767578,
+      "speedup_factor": 6.622794102839256
+    }
+  }
+}

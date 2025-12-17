@@ -14,9 +14,9 @@ We use a hash-based testing system to validate our implementations against the o
 
 #### Reference Test Files
 We validate against three test files from Granado Espada Classique:
-- **Small**: `ai.ipf` (4.3K) - AI game logic data
-- **Medium**: `item_texture.ipf` (183M) - Item texture assets
-- **Large**: `ui.ipf` (879M) - User interface assets
+- **Small**: `ai.ipf` (4.3K, 4 files) - AI game logic data - Full hash validation
+- **Medium**: `item_texture.ipf` (191MB, 3,063 files) - Item texture assets - Sampling validation
+- **Large**: `ui.ipf` (877MB, 11,567 files) - User interface assets - Sampling validation
 
 #### For Users - Validate Compiled Builds
 ```bash
@@ -30,7 +30,12 @@ python validate_hashes.py --verbose
 #### For Maintainers - Generate Reference Hashes
 ```bash
 # From testing directory - regenerate reference hashes (requires original tools)
-python generate_test_hashes.py --ipf-path /path/to/ge/folder
+cd testing
+python generate_hashes.py [--ipf-path /path/to/ipf/files]
+
+# Platform Requirements:
+# - Windows: Native execution of iz.exe and ez.exe tools
+# - Linux/Mac: Wine installed and configured for Windows tool execution
 ```
 
 ## Future Tool Testing (In Progress)
@@ -69,16 +74,15 @@ Verifies consistent behavior across Linux, Windows, and macOS for users who can'
 
 ### Hash-Based Testing Framework
 - `testing/test_hashes/` - Version-controlled hash databases and validation tools
-- `testing/test_hashes/reference_hashes.json` - Master hash database from original tools
-- `testing/test_hashes/tools/` - Tool-specific hash collections
+- `testing/test_hashes/tools/extraction_hashes.json` - Reference hashes from original Windows tools
+- `testing/test_hashes/validation_report.json` - Latest validation results and performance metrics
 - `testing/validate_hashes.py` - Public validation script for compiled builds
-- `testing/generate_test_hashes.py` - Maintainer script for hash regeneration
+- `testing/generate_hashes.py` - Maintainer script for hash regeneration (Windows: native, Linux/Mac: Wine)
 
 ### Traditional Testing
 Reference extractions from original tools are stored in `testing_goals/` directory. Each tool has its own reference data to validate against.
 
 ### Workflow Scripts (Local Only)
-- `workflows/testhashes/` - Local-only hash generation scripts (excluded from Git)
 - Contains scripts that require original Windows tools and proprietary IPF files
 
 ## Performance Metrics

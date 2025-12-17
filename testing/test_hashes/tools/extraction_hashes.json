@@ -1,0 +1,375 @@
+{
+  "tool": "iz.exe + ez.exe extraction process",
+  "purpose": "Reference hashes for IPF extraction validation",
+  "generated_at": "2025-12-16T23:23:19.083668",
+  "test_files": {
+    "small": {
+      "test_file": "ai.ipf",
+      "ipf_size": 4301,
+      "ipf_hash": "c02c6a779662fc03e9d1acd377d6531d17bf6aacaf2a78deb5d5e95a0658cf5d",
+      "timestamp": "2025-12-16T23:22:24.736156",
+      "iz_exe": {
+        "success": true,
+        "output_zip_hash": "494177f76c8ebd7ecddf7d92f6c0841f328e4e855824c86d4c4efe12324cde43",
+        "processing_time_ms": 4249.979734420776,
+        "output_size": 4301
+      },
+      "ez_exe": {
+        "success": true,
+        "processing_time_ms": 4256.5319538116455,
+        "directory_hash": {
+          "strategy": "full",
+          "file_count": 4,
+          "total_size": 28871,
+          "files": {
+            "attacker.scp": {
+              "hash": "072104f3f33b4d54e14755aba4be788d2822a4a2db144dc3748a91ec084fd4ef",
+              "size": 11442
+            },
+            "healer.scp": {
+              "hash": "6090a10e789e03b0f381d5c86169ccf2b3e041ca5cc8d674ce4bc61f97e19855",
+              "size": 6086
+            },
+            "lib.scp": {
+              "hash": "bc70a19cbe96e6b8adc24df425bab7fe7806fe1d5de0d40dfe20c7bc28205468",
+              "size": 5235
+            },
+            "puppet.scp": {
+              "hash": "fd6c2d446104a97874740ec6bc3d607855399e3ef39d94f1b0157e206f9cabbd",
+              "size": 6108
+            }
+          },
+          "manifest_hash": "e20d3c213af2e9081c0e2def46bfea41d2826a6e694f16893ea3995cd2faff1c"
+        }
+      },
+      "extracted_files": {
+        "strategy": "full",
+        "file_count": 4,
+        "total_size": 28871,
+        "files": {
+          "attacker.scp": {
+            "hash": "072104f3f33b4d54e14755aba4be788d2822a4a2db144dc3748a91ec084fd4ef",
+            "size": 11442
+          },
+          "healer.scp": {
+            "hash": "6090a10e789e03b0f381d5c86169ccf2b3e041ca5cc8d674ce4bc61f97e19855",
+            "size": 6086
+          },
+          "lib.scp": {
+            "hash": "bc70a19cbe96e6b8adc24df425bab7fe7806fe1d5de0d40dfe20c7bc28205468",
+            "size": 5235
+          },
+          "puppet.scp": {
+            "hash": "fd6c2d446104a97874740ec6bc3d607855399e3ef39d94f1b0157e206f9cabbd",
+            "size": 6108
+          }
+        },
+        "manifest_hash": "e20d3c213af2e9081c0e2def46bfea41d2826a6e694f16893ea3995cd2faff1c"
+      }
+    },
+    "medium": {
+      "test_file": "item_texture.ipf",
+      "ipf_size": 191224819,
+      "ipf_hash": "ffb1d70588685704e8101595312f4eb18ee8a65dbff08b30c0ed3f262bacdda8",
+      "timestamp": "2025-12-16T23:22:33.401675",
+      "iz_exe": {
+        "success": true,
+        "output_zip_hash": "444764dd79d65e572f7d3f2386abb13a45c934da7c94066e617a9ac1c3bd92f0",
+        "processing_time_ms": 4331.291437149048,
+        "output_size": 191224819
+      },
+      "ez_exe": {
+        "success": true,
+        "processing_time_ms": 8488.417863845825,
+        "directory_hash": {
+          "strategy": "sampling",
+          "file_count": 3063,
+          "total_size": 258360404,
+          "sampled_files": {
+            "2018Worldcapwing_1.dds": {
+              "hash": "0e9b0022f1ac51c33562f13b98eba95828099e646a8518ba54264b623ccca023",
+              "size": 349680
+            },
+            "2018Worldcapwing_1_pinkLeaf.dds": {
+              "hash": "4cb15627224497fd59ac510b0d1e0b0b2bbfc79aca67c4fc702993e3706dd584",
+              "size": 87536
+            },
+            "2018Worldcapwing_1_pinkLeaf2.dds": {
+              "hash": "b302133015f823a05f7b4375c117a27d8f74c355db7583ae3e4ffad9536749c6",
+              "size": 87536
+            },
+            "2018Worldcapwing_2.dds": {
+              "hash": "9a6e5d71676928ef7cab411406f93042419835a6f6b05052829c6c0e565bff39",
+              "size": 349680
+            },
+            "2018Worldcapwing_2_WhiteLeaf.dds": {
+              "hash": "c437db24673c5a51547a7701ea63604ab4012ae2a7c980b47bfd7b736f52ad5b",
+              "size": 87536
+            },
+            "it_m_kichunegamen.dds": {
+              "hash": "3d6e4fdaa38ec55ca2616321d3097c9b10a80c80ac3e2a9c3e5c10f831305343",
+              "size": 22000
+            },
+            "it_m_koreanclotheshat.dds": {
+              "hash": "209298e10f2c284ebd2bf7a8639ac2e619775503471a170e7a7cf7f7417132bc",
+              "size": 87536
+            },
+            "it_m_lacoiffuredu.dds": {
+              "hash": "65825b8d2542cad3a47880925488de11ebc577236d59a351e17c5b759a83fc6e",
+              "size": 87536
+            },
+            "it_m_laranjaepreto.dds": {
+              "hash": "5102d6c262fcbcb0df31e7c453643fb8b2851cff3aa7c199ea4cb3a48c28074a",
+              "size": 87536
+            },
+            "it_m_laurarockstarcos_hat.DDS": {
+              "hash": "57cab480f3a084557c4731dcc60b0c7f31beef6507ad2652c395665acd2909c0",
+              "size": 22000
+            },
+            "vokeheffect.dds": {
+              "hash": "a5b13d93f6ddd4d7371e1a1101dc36c77010e6779baae47be1c040147ccd4bce",
+              "size": 87536
+            },
+            "wiz_body_m_redserpent5_01.DDS": {
+              "hash": "899719d8cd7ac410e256f830c040ff2e224c418d4d11ef25f9326582b0de948c",
+              "size": 349680
+            },
+            "wiz_body_m_redserpent5_02.DDS": {
+              "hash": "bbbe846ff5ccf8c78837fee46ae2bba95be1b2ecf6a7fde47036c5f282e6fbdd",
+              "size": 349680
+            },
+            "wiz_m_capitainehair.dds": {
+              "hash": "1b2f0e3ec30a60779434c0e68729377f74f638efce68f085e5eadd36aa888df6",
+              "size": 87536
+            },
+            "wiz_m_operahat.dds": {
+              "hash": "d84702a8b245f76fd3b0b32f644c890028f037708c6060f891f217ad12ed69db",
+              "size": 87536
+            }
+          },
+          "sample_hash": "209269f4da2b46072b803e7970451b6d10c5d26b2ed8ebef0f3b64a34b4a1ff3"
+        }
+      },
+      "extracted_files": {
+        "strategy": "sampling",
+        "file_count": 3063,
+        "total_size": 258360404,
+        "sampled_files": {
+          "2018Worldcapwing_1.dds": {
+            "hash": "0e9b0022f1ac51c33562f13b98eba95828099e646a8518ba54264b623ccca023",
+            "size": 349680
+          },
+          "2018Worldcapwing_1_pinkLeaf.dds": {
+            "hash": "4cb15627224497fd59ac510b0d1e0b0b2bbfc79aca67c4fc702993e3706dd584",
+            "size": 87536
+          },
+          "2018Worldcapwing_1_pinkLeaf2.dds": {
+            "hash": "b302133015f823a05f7b4375c117a27d8f74c355db7583ae3e4ffad9536749c6",
+            "size": 87536
+          },
+          "2018Worldcapwing_2.dds": {
+            "hash": "9a6e5d71676928ef7cab411406f93042419835a6f6b05052829c6c0e565bff39",
+            "size": 349680
+          },
+          "2018Worldcapwing_2_WhiteLeaf.dds": {
+            "hash": "c437db24673c5a51547a7701ea63604ab4012ae2a7c980b47bfd7b736f52ad5b",
+            "size": 87536
+          },
+          "it_m_kichunegamen.dds": {
+            "hash": "3d6e4fdaa38ec55ca2616321d3097c9b10a80c80ac3e2a9c3e5c10f831305343",
+            "size": 22000
+          },
+          "it_m_koreanclotheshat.dds": {
+            "hash": "209298e10f2c284ebd2bf7a8639ac2e619775503471a170e7a7cf7f7417132bc",
+            "size": 87536
+          },
+          "it_m_lacoiffuredu.dds": {
+            "hash": "65825b8d2542cad3a47880925488de11ebc577236d59a351e17c5b759a83fc6e",
+            "size": 87536
+          },
+          "it_m_laranjaepreto.dds": {
+            "hash": "5102d6c262fcbcb0df31e7c453643fb8b2851cff3aa7c199ea4cb3a48c28074a",
+            "size": 87536
+          },
+          "it_m_laurarockstarcos_hat.DDS": {
+            "hash": "57cab480f3a084557c4731dcc60b0c7f31beef6507ad2652c395665acd2909c0",
+            "size": 22000
+          },
+          "vokeheffect.dds": {
+            "hash": "a5b13d93f6ddd4d7371e1a1101dc36c77010e6779baae47be1c040147ccd4bce",
+            "size": 87536
+          },
+          "wiz_body_m_redserpent5_01.DDS": {
+            "hash": "899719d8cd7ac410e256f830c040ff2e224c418d4d11ef25f9326582b0de948c",
+            "size": 349680
+          },
+          "wiz_body_m_redserpent5_02.DDS": {
+            "hash": "bbbe846ff5ccf8c78837fee46ae2bba95be1b2ecf6a7fde47036c5f282e6fbdd",
+            "size": 349680
+          },
+          "wiz_m_capitainehair.dds": {
+            "hash": "1b2f0e3ec30a60779434c0e68729377f74f638efce68f085e5eadd36aa888df6",
+            "size": 87536
+          },
+          "wiz_m_operahat.dds": {
+            "hash": "d84702a8b245f76fd3b0b32f644c890028f037708c6060f891f217ad12ed69db",
+            "size": 87536
+          }
+        },
+        "sample_hash": "209269f4da2b46072b803e7970451b6d10c5d26b2ed8ebef0f3b64a34b4a1ff3"
+      }
+    },
+    "large": {
+      "test_file": "ui.ipf",
+      "ipf_size": 921084358,
+      "ipf_hash": "a50e2bbef401a9312457cc21e584e7fceae818c7b3d886acde3a3c7e3dec6d1e",
+      "timestamp": "2025-12-16T23:22:47.054961",
+      "iz_exe": {
+        "success": true,
+        "output_zip_hash": "d783628d57bc6b8a7c24f976345e610867169bdc819d6c5a588ed5446089d0bb",
+        "processing_time_ms": 5155.68733215332,
+        "output_size": 921084358
+      },
+      "ez_exe": {
+        "success": true,
+        "processing_time_ms": 26344.56968307495,
+        "directory_hash": {
+          "strategy": "sampling",
+          "file_count": 11567,
+          "total_size": 741437619,
+          "sampled_files": {
+            "6464.bmp": {
+              "hash": "bb1fec53ab84bf9925c585aa53d90018c273a891fa0b054cff9f48eb65c2bf70",
+              "size": 12344
+            },
+            "6464_faction.bmp": {
+              "hash": "d667717de426da79d80d9a42837cc58e0f22e88d6fcd8ab4f5c29ef037842a86",
+              "size": 12344
+            },
+            "autoinspect.bmp": {
+              "hash": "4c1a5a5ede5cce13f65e26cc159313f65c01d76d126d07162060ffbf7b4d981d",
+              "size": 54656
+            },
+            "button27.tga": {
+              "hash": "95d376bcd4db24e64220bd035630f7f5afa6f6e836bca26566d2bcf889c2dc88",
+              "size": 65580
+            },
+            "button38.tga": {
+              "hash": "44e16060149e566c347d0690534324caa30e416f71b7ea4576d2a159e64e232b",
+              "size": 123665
+            },
+            "illust/it_r_normal22.bmp": {
+              "hash": "82bf86ce785ae12723c95b7a98edc38b9daade377656493cd7111a8b405b5653",
+              "size": 12344
+            },
+            "illust/it_r_normal23.bmp": {
+              "hash": "418938dc91e0e9aeafd63c777193987a2a9f8005ff92eb1fc1c3f5ba235e8497",
+              "size": 12344
+            },
+            "illust/it_r_normal24.bmp": {
+              "hash": "4f2d115de0a0c4c57b9447ec5344073339626eeb4d32063a14b0ef7a0ad2ad8f",
+              "size": 12344
+            },
+            "illust/it_r_normal25.bmp": {
+              "hash": "756b3f2eef9268f5ab6fb5e1c91a7ba4ec1e50c614f47ce4be381bf8fe1328bf",
+              "size": 12344
+            },
+            "illust/it_r_normal26.bmp": {
+              "hash": "47925091beeed547786d07a37155c7edc158566b2adcd51e0ef89622d7f09a92",
+              "size": 12344
+            },
+            "uixml/worldpvppreview.xml": {
+              "hash": "e782d9444f68ce605beba31f056a6eb23acbe51dff4fa144aec484404df5301e",
+              "size": 1987
+            },
+            "uixml/worldpvprank.xml": {
+              "hash": "6e20dbfac757856b95ad26cfefda58759f51393bd298ea36b2c214519f71909d",
+              "size": 4077
+            },
+            "uixml/worldpvpreward.xml": {
+              "hash": "57d9f2cac196d4c4cdada84c02822b31a509543438c78492dda63f2662510d7e",
+              "size": 2232
+            },
+            "uixml/worldpvpteam.xml": {
+              "hash": "a4a24d536f40284890d66f7459ad724e7af814304e50314bb689cc6e56bcc27a",
+              "size": 1575
+            },
+            "uixml/DEU/img.xml": {
+              "hash": "57f2a537810123a976f2dfe391bd93c3dc8f84151931e46cc58d49d072997039",
+              "size": 12636
+            }
+          },
+          "sample_hash": "06127ec7b56074fc6a8acf30e13a1b5389fba7b0f44746a697ace1c9751c03fa"
+        }
+      },
+      "extracted_files": {
+        "strategy": "sampling",
+        "file_count": 11567,
+        "total_size": 741437619,
+        "sampled_files": {
+          "6464.bmp": {
+            "hash": "bb1fec53ab84bf9925c585aa53d90018c273a891fa0b054cff9f48eb65c2bf70",
+            "size": 12344
+          },
+          "6464_faction.bmp": {
+            "hash": "d667717de426da79d80d9a42837cc58e0f22e88d6fcd8ab4f5c29ef037842a86",
+            "size": 12344
+          },
+          "autoinspect.bmp": {
+            "hash": "4c1a5a5ede5cce13f65e26cc159313f65c01d76d126d07162060ffbf7b4d981d",
+            "size": 54656
+          },
+          "button27.tga": {
+            "hash": "95d376bcd4db24e64220bd035630f7f5afa6f6e836bca26566d2bcf889c2dc88",
+            "size": 65580
+          },
+          "button38.tga": {
+            "hash": "44e16060149e566c347d0690534324caa30e416f71b7ea4576d2a159e64e232b",
+            "size": 123665
+          },
+          "illust/it_r_normal22.bmp": {
+            "hash": "82bf86ce785ae12723c95b7a98edc38b9daade377656493cd7111a8b405b5653",
+            "size": 12344
+          },
+          "illust/it_r_normal23.bmp": {
+            "hash": "418938dc91e0e9aeafd63c777193987a2a9f8005ff92eb1fc1c3f5ba235e8497",
+            "size": 12344
+          },
+          "illust/it_r_normal24.bmp": {
+            "hash": "4f2d115de0a0c4c57b9447ec5344073339626eeb4d32063a14b0ef7a0ad2ad8f",
+            "size": 12344
+          },
+          "illust/it_r_normal25.bmp": {
+            "hash": "756b3f2eef9268f5ab6fb5e1c91a7ba4ec1e50c614f47ce4be381bf8fe1328bf",
+            "size": 12344
+          },
+          "illust/it_r_normal26.bmp": {
+            "hash": "47925091beeed547786d07a37155c7edc158566b2adcd51e0ef89622d7f09a92",
+            "size": 12344
+          },
+          "uixml/worldpvppreview.xml": {
+            "hash": "e782d9444f68ce605beba31f056a6eb23acbe51dff4fa144aec484404df5301e",
+            "size": 1987
+          },
+          "uixml/worldpvprank.xml": {
+            "hash": "6e20dbfac757856b95ad26cfefda58759f51393bd298ea36b2c214519f71909d",
+            "size": 4077
+          },
+          "uixml/worldpvpreward.xml": {
+            "hash": "57d9f2cac196d4c4cdada84c02822b31a509543438c78492dda63f2662510d7e",
+            "size": 2232
+          },
+          "uixml/worldpvpteam.xml": {
+            "hash": "a4a24d536f40284890d66f7459ad724e7af814304e50314bb689cc6e56bcc27a",
+            "size": 1575
+          },
+          "uixml/DEU/img.xml": {
+            "hash": "57f2a537810123a976f2dfe391bd93c3dc8f84151931e46cc58d49d072997039",
+            "size": 12636
+          }
+        },
+        "sample_hash": "06127ec7b56074fc6a8acf30e13a1b5389fba7b0f44746a697ace1c9751c03fa"
+      }
+    }
+  }
+}
