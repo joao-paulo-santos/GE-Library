@@ -151,6 +151,16 @@ func (ce *ConcurrentExtractor) extractWithCustomDecryption(task ExtractionTask) 
 
 // writeExtractedData writes extracted data to file
 func (ce *ConcurrentExtractor) writeExtractedData(data []byte, finalPath string, index int, startTime int64) ExtractionResult {
+	// Create parent directories if they don't exist
+	parentDir := filepath.Dir(finalPath)
+	if err := os.MkdirAll(parentDir, 0755); err != nil {
+		return ExtractionResult{
+			Index:   index,
+			Success: false,
+			Error:   fmt.Errorf("failed to create parent directory %s: %w", parentDir, err),
+		}
+	}
+
 	outFile, err := os.OpenFile(finalPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return ExtractionResult{

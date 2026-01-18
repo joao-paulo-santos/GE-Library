@@ -1,0 +1,35 @@
+{
+  "validation_summary": {
+    "total_files_tested": 3,
+    "successful_validations": 3,
+    "success_rate": 1.0,
+    "tool_type": "extraction",
+    "timestamp": "2025-12-17T19:24:57.223083"
+  },
+  "results_summary": {
+    "small": {
+      "test_file": "ai.ipf",
+      "status": "validation_complete",
+      "strategy": "full",
+      "file_count": 4,
+      "total_size": 28871,
+      "perfect_match": true
+    },
+    "medium": {
+      "test_file": "item_texture.ipf",
+      "status": "validation_complete",
+      "strategy": "sampling",
+      "file_count": 3063,
+      "total_size": 258360404,
+      "perfect_match": true
+    },
+    "large": {
+      "test_file": "ui.ipf",
+      "status": "validation_complete",
+      "strategy": "sampling",
+      "file_count": 11567,
+      "total_size": 741437970,
+      "perfect_match": true
+    }
+  }
+}

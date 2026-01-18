@@ -156,6 +156,9 @@ func MakeSafeFilename(filename string) string {
 		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') ||
 			r == '_' || r == '-' || r == '.' || r == '/' || r == ' ' {
 			safe = append(safe, r)
+		} else if r == '\\' {
+			// Convert Windows backslashes to Unix forward slashes for cross-platform compatibility
+			safe = append(safe, '/')
 		} else {
 			safe = append(safe, '_')
 		}
