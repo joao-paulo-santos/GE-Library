@@ -17,11 +17,11 @@ import (
 
 // ExtractionTask represents a file extraction task
 type ExtractionTask struct {
-	FileInfo   *FileInfo
-	OutputDir  string
-	ZipReader  *zip.ReadCloser
-	Index      int
-	Password   []byte
+	FileInfo  *FileInfo
+	OutputDir string
+	ZipReader *zip.ReadCloser
+	Index     int
+	Password  []byte
 }
 
 // ExtractionResult represents the result of extracting a file
@@ -38,7 +38,7 @@ type ExtractionResult struct {
 type ExtractionTiming struct {
 	IPFDecryption     time.Duration
 	ExtractDecryption time.Duration
-	IO               time.Duration
+	IO                time.Duration
 }
 
 // ConcurrentExtractor handles parallel file extraction
@@ -214,16 +214,31 @@ func (ce *ConcurrentExtractor) ExtractAllParallel(ctx context.Context, outputDir
 		return nil, fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	// Create extraction tasks
-	tasks := make([]ExtractionTask, len(fileInfos))
+	// Handle IPF progressive bloat: keep only newest version of each file
+	// Build a map: filename -> highest index FileInfo
+	filenameMap := make(map[string]*FileInfo)
 	for i, fileInfo := range fileInfos {
-		tasks[i] = ExtractionTask{
-			FileInfo:  &fileInfo,
+		if existing, exists := filenameMap[fileInfo.SafeFilename]; exists {
+			// File with this name already exists, keep higher index (newer version)
+			if i > existing.Index {
+				filenameMap[fileInfo.SafeFilename] = &fileInfo
+			}
+		} else {
+			// First occurrence, add it
+			filenameMap[fileInfo.SafeFilename] = &fileInfo
+		}
+	}
+
+	// Create extraction tasks only for files we want to keep (unique, newest versions)
+	tasks := make([]ExtractionTask, 0, len(filenameMap))
+	for _, fileInfo := range filenameMap {
+		tasks = append(tasks, ExtractionTask{
+			FileInfo:  fileInfo,
 			OutputDir: outputDir,
 			ZipReader: ce.zipReader,
-			Index:     i,
+			Index:     fileInfo.Index,
 			Password:  password,
-		}
+		})
 	}
 
 	// Create parallel processor
@@ -243,7 +258,6 @@ func (ce *ConcurrentExtractor) ExtractBatch(ctx context.Context, outputDir strin
 	// For simplicity, delegate to the main parallel extraction function
 	return ce.ExtractAllParallel(ctx, outputDir, password)
 }
-
 
 // getTimeMillis returns current time in milliseconds
 func getTimeMillis() int64 {
