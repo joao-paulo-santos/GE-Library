@@ -7,8 +7,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/ipf-extractor/ipf-extractor/pkg/zipcipher"
-	"github.com/ipf-extractor/ipf-extractor/pkg/workers"
+	"github.com/joao-paulo-santos/GE-Library/pkg/workers"
+	"github.com/joao-paulo-santos/GE-Library/pkg/zipcipher"
 )
 
 // DecryptionTask represents a filename decryption task
@@ -28,8 +28,8 @@ type DecryptionResult struct {
 
 // FilenameDecryptor handles parallel decryption of filenames
 type FilenameDecryptor struct {
-	password      []byte
-	workerCount   int
+	password    []byte
+	workerCount int
 }
 
 // NewFilenameDecryptor creates a new filename decryptor
