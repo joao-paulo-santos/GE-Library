@@ -1,38 +1,91 @@
-# Exclude everything by default
-*
+# ============================================
+# WHITELIST RULES (must come first)
+# ============================================
 
-# Whitelist important files
+# Whitelist important root files
 !.gitignore
 !README.md
 
-# Whitelist source directory and all its contents
+# Whitelist source directory
 !src/
 !src/**
 
-# Whitelist testing goals directory
-!testing_goals/
-!testing_goals/**
-
-# Whitelist documentation directory and all its contents
+# Whitelist documentation directory
 !documentation/
 !documentation/**
 
-# Whitelist benchmarks directory and all its contents
+# Whitelist benchmarks directory
 !benchmarks/
 !benchmarks/**
 
-# Whitelist testing directory structure but exclude proprietary IPF files
-!testing/
+# ============================================
+# EXCLUDE EVERYTHING ELSE
+# ============================================
+*
+
+# ============================================
+# RE-WHITELIST SPECIFIC PATHS
+# ============================================
+
+# Whitelist testing framework (source code, hashes, docs, scripts)
+!testing/src/
+!testing/src/**
+!testing/test_hashes/
+!testing/test_hashes/**
 !testing/**.md
 !testing/**.py
 !testing/**.json
-!testing/test_hashes/
-!testing/test_hashes/**
+!testing/package.json
+!testing/cli.js
+
+# Whitelist original tools documentation (scripts and README only)
+!releases/original/README.md
+!releases/original/getools.bat
+!releases/original/getools.sh
+!releases/original/readme/
+
+# ============================================
+# EXCLUDE PROPRIETARY DATA
+# ============================================
+
+# Exclude proprietary IPF files (DO NOT UPLOAD)
 testing/test_files/
-testing/test_files/
+testing/reference_original/
+testing/reference_our/
 testing/**/*.ipf
 testing/**/*.zip
-*.zip
+
+# Exclude proprietary Windows tools (DO NOT UPLOAD)
+releases/original/bin/
+releases/original/*.exe
+releases/original/*.dll
+releases/original/*.bin
+
 # Exclude temporary extraction directories
 temp_*/
 **/temp_*/
+*.zip
+
+# ============================================
+# EXCLUDE BUILD ARTIFACTS
+# ============================================
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.*.swp
+
+# Build outputs
+build/
+dist/
+out/

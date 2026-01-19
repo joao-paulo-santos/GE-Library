@@ -1,0 +1,53 @@
+{
+  "name": "ipf-validation-framework",
+  "version": "2.0.0",
+  "description": "Modular JavaScript validation framework for Granado Espada IPF tools",
+  "main": "cli.js",
+  "scripts": {
+    "validate": "node cli.js validate",
+    "validate:verbose": "node cli.js validate --verbose",
+    "compare": "node cli.js compare",
+    "extract": "node cli.js extract",
+    "generate": "node cli.js generate",
+    "test": "node cli.js test",
+    "test:keep": "node cli.js test --keep",
+    "help": "node cli.js --help"
+  },
+  "keywords": [
+    "ipf",
+    "granado espada",
+    "validation",
+    "extraction",
+    "hash",
+    "tool",
+    "ge",
+    "ipf-extractor"
+  ],
+  "author": "Granado Espada Tool Library",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/granado-espada-tools"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "jest": "^27.0.0"
+  },
+  "bin": {
+    "ipf-validate": "./cli.js",
+    "ipf-compare": "./cli.js",
+    "ipf-extract": "./cli.js",
+    "ipf-generate": "./cli.js"
+  },
+  "os": [
+    "win32",
+    "linux",
+    "darwin"
+  ],
+  "preferGlobal": false,
+  "private": true
+}

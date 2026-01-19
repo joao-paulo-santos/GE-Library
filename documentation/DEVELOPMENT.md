@@ -96,12 +96,11 @@ Granado Espada's IPF system suffers from progressive file bloat:
 ## Project Structure
 
 ```
-ipf_decompiler/                 # Main project directory
+/                                   # Main project directory
 ├── README.md                    # Main project documentation
 ├── documentation/               # Technical documentation
 │   ├── DEVELOPMENT.md          # Development and architecture guide
-│   ├── TESTING.md              # Testing framework and validation
-│   └── commands.md             # Command reference
+│   └── TESTING.md              # Testing framework and validation
 ├── src/                         # Source code directory
 │   ├── python/                  # Python reference implementation
 │   │   ├── ipf_extractor.py    # Main extraction tool
@@ -110,12 +109,20 @@ ipf_decompiler/                 # Main project directory
 │       ├── cmd/ipf-extractor/   # CLI application
 │       ├── pkg/ipf/             # Core IPF extraction logic
 │       └── pkg/zipcipher/       # ZIP decryption implementation
-├── testing_goals/               # Reference extractions from original tools
-├── benchmarks/                  # Performance benchmarking tools
+├── testing/                     # Testing framework
+│   ├── src/                    # Framework source code (modular architecture)
+│   ├── test_files/             # IPF test files
+│   ├── test_hashes/            # Hash databases
+│   ├── reference_original/       # Original tool extractions
+│   ├── reference_our/           # Our tool extractions (temporary)
+│   ├── package.json             # NPM scripts and config
+│   ├── README.md                # Framework documentation
+│   ├── architecture.md           # Technical architecture
+│   └── cli.js                   # Main entry point
 ├── releases/                    # Built binaries and release packages
-├── iz.exe                      # Original Windows tool (for reference)
-├── ez.exe                      # Original Windows tool (for reference)
-├── CLAUDE.md                   # Development context and guidelines
+│   └── original/               # Original Windows tools
+│       ├── bin/                 # Executable .exe files
+│       └── README.md            # Tool documentation
 └── GO_PERFORMANCE_ANALYSIS.md  # Detailed performance analysis
 ```
 
