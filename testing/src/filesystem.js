@@ -133,6 +133,20 @@ function moveFile(src, dest) {
     fs.renameSync(src, dest);
 }
 
+/**
+ * Remove file
+ * @param {string} filePath - File path
+ */
+function removeFile(filePath) {
+    try {
+        fs.unlinkSync(filePath);
+    } catch (error) {
+        if (error.code !== 'ENOENT') {
+            throw error;
+        }
+    }
+}
+
 module.exports = {
     ensureDir,
     removeDir,
@@ -144,5 +158,6 @@ module.exports = {
     scanDirectory,
     getFileInfo,
     copyFile,
-    moveFile
+    moveFile,
+    removeFile
 };
