@@ -6,40 +6,39 @@
 const path = require('path');
 const ExtractValidator = require('../../validation/extract-validator');
 const { fileExists } = require('../../filesystem');
-const ConsoleReporter = require('../../reporting/console-reporter');
 const JsonReporter = require('../../reporting/json-reporter');
 const Logger = require('../../logger');
 const config = require('../../config');
 
 async function validateSingle(options) {
     const logger = new Logger(config.LOG_LEVEL, config.LOG_SINK, config.LOG_FILE);
-    const consoleReporter = new ConsoleReporter(logger);
     const jsonReporter = new JsonReporter(logger);
 
     if (!options.output || !options.testKey) {
         logger.error('Missing required options: --output and --test-key');
-        consoleReporter.printError('Missing required options: --output and --test-key');
         return 1;
     }
 
     if (!fileExists(options.output)) {
         logger.error(`Output not found: ${options.output}`);
-        consoleReporter.printError(`Output not found: ${options.output}`);
         return 1;
     }
 
-    const referencePath = options.reference || config.EXTRACTION_ORIGINAL_HASHES_PATH;
+    const referencePath = options.reference || config.TEST_HASHES_DIR + '/tools/extraction/original_hashes.json';
 
     if (!fileExists(referencePath)) {
         logger.error(`Reference hashes not found: ${referencePath}`);
-        consoleReporter.printError(`Reference hashes not found: ${referencePath}`);
         return 1;
     }
 
     const validator = new ExtractValidator(referencePath, logger);
     const result = await validator.validate(options.output, options.testKey);
 
-    consoleReporter.printValidationDetails({ [options.testKey]: result });
+    if (result.perfect_match) {
+        logger.success(`✓ ${options.testKey}: PASS`);
+    } else {
+        logger.error(`✗ ${options.testKey}: FAIL - ${result.error || result.reason || 'Unknown error'}`);
+    }
 
     if (!options.quiet) {
         const summary = {
@@ -48,23 +47,34 @@ async function validateSingle(options) {
             success_rate: result.perfect_match ? 1 : 0
         };
 
-        consoleReporter.printValidationSummary(summary);
+        if (summary.success_rate === 1) {
+            logger.success(`Validation complete: ${summary.successful_validations}/${summary.total_files_tested} tests passed`);
+        } else {
+            logger.error(`Validation failed: ${summary.successful_validations}/${summary.total_files_tested} tests passed (${(summary.success_rate * 100).toFixed(1)}%)`);
+        }
     }
 
-    const { getExitCode } = require('../command-utils');
-    return getExitCode(result);
+    if (options.reportJson) {
+        const report = jsonReporter.generateReport({ [options.testKey]: result }, {
+            tool_type: 'extraction'
+        });
+
+        jsonReporter.saveReport(report, options.reportJson);
+        logger.info(`Report saved to: ${options.reportJson}`);
+    }
+
+    return result.perfect_match ? 0 : 1;
 }
 
 async function validateAll(options) {
     const logger = new Logger(config.LOG_LEVEL, config.LOG_SINK, config.LOG_FILE);
-    const consoleReporter = new ConsoleReporter(logger);
     const jsonReporter = new JsonReporter(logger);
-    const referencePath = config.EXTRACTION_ORIGINAL_HASHES_PATH;
+    const referencePath = config.TEST_HASHES_DIR + '/tools/extraction/original_hashes.json';
     const validator = new ExtractValidator(referencePath, logger);
 
-    consoleReporter.printInfo('=== Granado Espada IPF Extraction Validation ===');
-    consoleReporter.printInfo(`Tool type: extraction`);
-    consoleReporter.printInfo(`Reference hashes: Available`);
+    logger.info('=== Granado Espada IPF Extraction Validation ===');
+    logger.info(`Tool type: extraction`);
+    logger.info(`Reference hashes: Available`);
 
     const results = {};
     let successfulCount = 0;
@@ -80,11 +90,11 @@ async function validateAll(options) {
             if (result.perfect_match) {
                 successfulCount++;
                 if (options.verbose) {
-                    consoleReporter.printSuccess(`${fileKey}: Perfect match`);
+                    logger.success(`✓ ${fileKey}: PASS`);
                 }
             } else {
                 if (options.verbose) {
-                    consoleReporter.printError(`${fileKey}: Failed - ${result.error || result.reason || 'Unknown error'}`);
+                    logger.error(`✗ ${fileKey}: FAIL - ${result.error || result.reason || 'Unknown error'}`);
                 }
             }
         }
@@ -96,7 +106,11 @@ async function validateAll(options) {
         success_rate: totalCount > 0 ? successfulCount / totalCount : 0
     };
 
-    consoleReporter.printValidationSummary(summary);
+    if (summary.success_rate === 1) {
+        logger.success(`Validation complete: ${summary.successful_validations}/${summary.total_files_tested} tests passed`);
+    } else {
+        logger.error(`Validation failed: ${summary.successful_validations}/${summary.total_files_tested} tests passed (${(summary.success_rate * 100).toFixed(1)}%)`);
+    }
 
     const report = jsonReporter.generateReport(results, {
         tool_type: 'extraction'
@@ -107,7 +121,6 @@ async function validateAll(options) {
         logger.info(`Report saved to: ${options.reportJson}`);
     }
 
-    const { getExitCode } = require('../command-utils');
     return summary.success_rate === 1 ? 0 : 1;
 }
 
@@ -141,11 +154,12 @@ Description:
 Options:
     --verbose, -v       Enable detailed output
     --quiet, -q         Suppress console output
+    --report-json <path>  Save report to JSON file
     --help, -h          Show this help message
 
 Examples:
     node validate.js --test-key small --output reference_our/small_our
-    node validate.js --verbose
-`;
+    node validate.js --verbose --report-json report.json
+        `;
     }
 };

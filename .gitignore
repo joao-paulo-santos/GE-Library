@@ -1,7 +1,11 @@
 # ============================================
-# WHITELIST RULES (must come first)
+# EXCLUDE EVERYTHING
 # ============================================
+*
 
+# ============================================
+# RE-WHITELIST SPECIFIC PATHS
+# ============================================
 # Whitelist important root files
 !.gitignore
 !README.md
@@ -18,25 +22,9 @@
 !benchmarks/
 !benchmarks/**
 
-# ============================================
-# EXCLUDE EVERYTHING ELSE
-# ============================================
-*
-
-# ============================================
-# RE-WHITELIST SPECIFIC PATHS
-# ============================================
-
 # Whitelist testing framework (source code, hashes, docs, scripts)
-!testing/src/
-!testing/src/**
-!testing/test_hashes/
-!testing/test_hashes/**
-!testing/**.md
-!testing/**.py
-!testing/**.json
-!testing/package.json
-!testing/cli.js
+!testing/
+!testing/**
 
 # Whitelist original tools documentation (scripts and README only)
 !releases/original/README.md

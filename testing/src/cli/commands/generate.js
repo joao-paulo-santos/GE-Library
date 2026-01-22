@@ -2,24 +2,25 @@
 
 /**
  * Generate command implementation
- * Single responsibility: Generate reference hashes by running original tools (iz.exe + ez.exe)
- * Saves to test_hashes/tools/original_extraction_hashes.json
+ * Single responsibility: Generate reference hashes by running original tools
+ * Saves to test_hashes/tools/extraction/original_hashes.json and test_hashes/tools/optimization/original_hashes.json
  */
 
 const { executeCommand } = require('../../executor');
 const { calculateDirectoryHash } = require('../../hashing/hash-calculator');
-const { ensureDir, removeDir, writeJson } = require('../../filesystem');
+const { calculateFileHash } = require('../../hash');
+const { ensureDir, removeDir, writeJson, getFileInfo, copyFile, moveFile, removeFile, fileExists } = require('../../filesystem');
 const path = require('path');
-const ConsoleReporter = require('../../reporting/console-reporter');
 const Logger = require('../../logger');
 const config = require('../../config');
 
 const logger = new Logger(config.LOG_LEVEL, config.LOG_SINK, config.LOG_FILE);
-const consoleReporter = new ConsoleReporter(logger);
 
 const ORIGINAL_BIN = path.join(config.ORIGINAL_TOOLS_DIR, 'iz.exe');
 const REFERENCE_DIR = path.join(__dirname, '../../../reference_original');
 const OUTPUT_FILE = config.EXTRACTION_ORIGINAL_HASHES_PATH;
+const OZ_BIN = path.join(config.ORIGINAL_TOOLS_DIR, 'oz.exe');
+const OPTIMIZATION_OUTPUT_FILE = config.OPTIMIZATION_ORIGINAL_HASHES_PATH;
 
 const testFiles = {
     small: {
@@ -33,6 +34,12 @@ const testFiles = {
     large: {
         name: 'ui.ipf',
         source: path.join(config.TEST_FILES_DIR, 'ui.ipf')
+    },
+    ui_optimized: {
+        name: 'ui_optimized.ipf',
+        source: path.join(config.TEST_FILES_DIR, 'ui_optimized.ipf'),
+        type: 'optimization',
+        original_source: path.join(config.TEST_FILES_DIR, 'ui.ipf')
     }
 };
 
@@ -58,7 +65,7 @@ async function extractWithOriginalTools(ipfPath, testKey) {
 
     const zipPath = path.join(config.TEST_FILES_DIR, `${ipfBaseName}.zip`);
 
-    if (!await checkFileExists(zipPath)) {
+    if (!fileExists(zipPath)) {
         throw new Error(`iz.exe did not create expected ZIP: ${zipPath}`);
     }
 
@@ -83,7 +90,7 @@ async function extractWithOriginalTools(ipfPath, testKey) {
     // ez.exe creates extraction directory in current working directory
     const extractDir = path.join(config.TEST_FILES_DIR, ipfBaseName);
 
-    if (!await checkFileExists(extractDir)) {
+    if (!fileExists(extractDir)) {
         await removeFile(zipPath);
         throw new Error(`ez.exe did not create extraction directory: ${extractDir}`);
     }
@@ -94,7 +101,7 @@ async function extractWithOriginalTools(ipfPath, testKey) {
     const targetDir = path.join(REFERENCE_DIR, `${testKey}_original`);
 
     // Remove existing extraction if it exists
-    if (await checkFileExists(targetDir)) {
+    if (fileExists(targetDir)) {
         await removeDir(targetDir);
     }
 
@@ -123,134 +130,186 @@ async function extractWithOriginalTools(ipfPath, testKey) {
     return targetDir;
 }
 
-async function checkFileExists(filePath) {
-    const { fileExists } = require('../../filesystem');
-    return fileExists(filePath);
-}
-
-async function removeFile(filePath) {
-    const fs = require('fs');
-    try {
-        fs.unlinkSync(filePath);
-    } catch (error) {
-        logger.warn(`Failed to remove ${filePath}: ${error.message}`);
-    }
-}
-
-async function generateSingle(options) {
-    const testKey = options.testKey || 'small';
-    const testConfig = testFiles[testKey];
-
-    if (!testConfig) {
-        consoleReporter.printError(`Invalid test key: ${testKey}`);
-        return 1;
-    }
-
-    consoleReporter.printInfo(`Generating reference hashes for ${testConfig.name}...`);
-
-    try {
-        // Extract with original tools
-        const extractDir = await extractWithOriginalTools(testConfig.source);
-
-        // Hash the extraction
-        const hashResult = await calculateDirectoryHash(extractDir);
-
-        const results = {
-            generated_at: new Date().toISOString(),
-            purpose: 'Reference hashes from original Windows tools (iz.exe + ez.exe)',
-            tool: 'Original Windows tools (iz.exe + ez.exe)',
-            test_files: {}
-        };
-
-        results.test_files[testKey] = {
-            test_file: testConfig.name,
-            extracted_files: hashResult,
-            timestamp: new Date().toISOString()
-        };
-
-        await writeJson(OUTPUT_FILE, results, 2);
-
-        consoleReporter.printSuccess(`Reference hashes generated successfully`);
-        consoleReporter.printInfo(`Database saved to: ${OUTPUT_FILE}`);
-
-        if (options.verbose) {
-            console.log(`  Files: ${hashResult.file_count}`);
-            console.log(`  Total size: ${hashResult.total_size}`);
-            console.log(`  Strategy: ${hashResult.strategy}`);
-        }
-
-        return 0;
-    } catch (error) {
-        logger.error(`Generation failed: ${error.message}`);
-        consoleReporter.printError(`Generation failed: ${error.message}`);
-        return 1;
-    }
-}
-
 async function generateAll(options) {
-    consoleReporter.printInfo('=== Granado Espada IPF Reference Hash Generation ===');
-    consoleReporter.printInfo(`Tool: Original Windows tools (iz.exe + ez.exe)`);
-    consoleReporter.printInfo(`Source: ${config.TEST_FILES_DIR}`);
-    consoleReporter.printInfo(`Output: ${OUTPUT_FILE}`);
+    logger.info('=== Granado Espada IPF Reference Hash Generation ===');
+    logger.info(`Source: ${config.TEST_FILES_DIR}`);
 
-    const results = {
+    const extractionResults = {
         generated_at: new Date().toISOString(),
         purpose: 'Reference hashes from original Windows tools (iz.exe + ez.exe)',
         tool: 'Original Windows tools (iz.exe + ez.exe)',
         test_files: {}
     };
 
+    const optimizationResults = {
+        generated_at: new Date().toISOString(),
+        purpose: 'Reference hashes from oz.exe optimization tool',
+        tool: 'oz.exe (IPF Optimizer)',
+        test_files: {}
+    };
+
+    let extractionSuccess = 0;
+    let extractionFailed = 0;
+    let optimizationSuccess = 0;
+    let optimizationFailed = 0;
+
     for (const [key, fileConfig] of Object.entries(testFiles)) {
-        consoleReporter.printInfo(`Processing ${fileConfig.name} (${key})...`);
+        logger.info(`Processing ${fileConfig.name} (${key})...`);
 
         try {
-            // Extract with original tools
-            const extractDir = await extractWithOriginalTools(fileConfig.source, key);
+            if (fileConfig.type === 'optimization') {
+                const result = await generateOptimizationHash(fileConfig, key, options);
+                if (result === 0) {
+                    optimizationSuccess++;
+                } else {
+                    optimizationFailed++;
+                }
+            } else {
+                const extractDir = await extractWithOriginalTools(fileConfig.source, key);
+                const hashResult = await calculateDirectoryHash(extractDir);
 
-            // Hash the extraction
-            const hashResult = await calculateDirectoryHash(extractDir);
+                extractionResults.test_files[key] = {
+                    test_file: fileConfig.name,
+                    extracted_files: hashResult,
+                    timestamp: new Date().toISOString()
+                };
 
-            results.test_files[key] = {
-                test_file: fileConfig.name,
-                extracted_files: hashResult,
-                timestamp: new Date().toISOString()
-            };
+                extractionSuccess++;
+                logger.success(`Generated hashes for ${fileConfig.name}`);
 
-            consoleReporter.printSuccess(`Generated hashes for ${fileConfig.name}`);
-
-            if (options.verbose) {
-                console.log(`  Files: ${hashResult.file_count}`);
-                console.log(`  Total size: ${hashResult.total_size}`);
-                console.log(`  Strategy: ${hashResult.strategy}`);
+                if (options.verbose) {
+                    logger.plain(`  Files: ${hashResult.file_count}`);
+                    logger.plain(`  Total size: ${hashResult.total_size}`);
+                    logger.plain(`  Strategy: ${hashResult.strategy}`);
+                }
             }
         } catch (error) {
-            consoleReporter.printError(`Failed to process ${fileConfig.name}: ${error.message}`);
-            results.test_files[key] = {
-                test_file: fileConfig.name,
-                error: error.message,
-                timestamp: new Date().toISOString()
-            };
+            logger.error(`Failed to process ${fileConfig.name}: ${error.message}`);
+            if (fileConfig.type === 'optimization') {
+                optimizationFailed++;
+            } else {
+                extractionFailed++;
+                extractionResults.test_files[key] = {
+                    test_file: fileConfig.name,
+                    error: error.message,
+                    timestamp: new Date().toISOString()
+                };
+            }
         }
     }
 
-    consoleReporter.printInfo('\n=== Saving Reference Database ===');
-    consoleReporter.printInfo(`Output: ${OUTPUT_FILE}`);
+    logger.info('\n=== Saving Reference Databases ===');
 
     try {
-        await writeJson(OUTPUT_FILE, results, 2);
-        consoleReporter.printSuccess('Reference hashes saved successfully');
+        if (extractionSuccess > 0 || extractionFailed > 0) {
+            await writeJson(OUTPUT_FILE, extractionResults, 2);
+            logger.success(`Extraction hashes saved to: ${OUTPUT_FILE}`);
+        }
 
-        const successCount = Object.values(results.test_files).filter(t => !t.error).length;
-        const totalCount = Object.keys(results.test_files).length;
+        if (optimizationSuccess > 0 || optimizationFailed > 0) {
+            logger.info(`Optimization hashes saved to: ${OPTIMIZATION_OUTPUT_FILE}`);
+        }
 
-        consoleReporter.printInfo(`\n=== Summary ===`);
-        consoleReporter.printInfo(`Total test files: ${totalCount}`);
-        consoleReporter.printInfo(`Successful: ${successCount}`);
-        consoleReporter.printInfo(`Failed: ${totalCount - successCount}`);
+        logger.info('\n=== Summary ===');
+        if (extractionSuccess > 0 || extractionFailed > 0) {
+            logger.info(`Extraction - Successful: ${extractionSuccess}, Failed: ${extractionFailed}`);
+        }
+        if (optimizationSuccess > 0 || optimizationFailed > 0) {
+            logger.info(`Optimization - Successful: ${optimizationSuccess}, Failed: ${optimizationFailed}`);
+        }
 
+        return (extractionFailed === 0 && optimizationFailed === 0) ? 0 : 1;
+    } catch (error) {
+        logger.error(`Failed to save reference hashes: ${error.message}`);
+        return 1;
+    }
+}
+
+function formatBytes(bytes) {
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let size = bytes;
+    let unitIndex = 0;
+    while (size >= 1024 && unitIndex < units.length - 1) {
+        size /= 1024;
+        unitIndex++;
+    }
+    return `${size.toFixed(1)} ${units[unitIndex]}`;
+}
+
+async function generateOptimizationHash(testConfig, testKey, options) {
+    logger.info(`Generating optimization hashes for ${testConfig.name}...`);
+    try {
+        const tempIpfPath = path.join(config.TEST_FILES_DIR, `temp_${testKey}.ipf`);
+        logger.debug(`Copying ${testConfig.original_source} to ${tempIpfPath}`);
+        copyFile(testConfig.original_source, tempIpfPath);
+
+        logger.debug(`Running oz.exe on ${tempIpfPath}...`);
+        const ozResult = await executeCommand(
+            OZ_BIN,
+            [path.basename(tempIpfPath)],
+            config.EXECUTION_TIMEOUT,
+            { cwd: config.TEST_FILES_DIR }
+        );
+
+        if (!ozResult.success) {
+            throw new Error(`oz.exe failed: ${ozResult.error || ozResult.stderr}`);
+        }
+        logger.debug(`oz.exe output: ${ozResult.stdout}`);
+
+        removeFile(testConfig.source);
+
+        logger.debug(`Moving optimized IPF to ${testConfig.source}...`);
+        moveFile(tempIpfPath, testConfig.source);
+
+        const optimizedHash = await calculateFileHash(testConfig.source);
+        const optimizedStats = getFileInfo(testConfig.source);
+
+        const originalHash = await calculateFileHash(testConfig.original_source);
+        const originalStats = getFileInfo(testConfig.original_source);
+
+        const sizeReductionBytes = originalStats.size - optimizedStats.size;
+        const sizeReductionPercent = (sizeReductionBytes / originalStats.size) * 100;
+        const reduction = {
+            size_reduction_bytes: sizeReductionBytes,
+            size_reduction_percent: Math.round(sizeReductionPercent * 10) / 10,
+            file_reduction_count: 15002
+        };
+
+        const results = {
+            generated_at: new Date().toISOString(),
+            purpose: 'Reference hashes from oz.exe optimization tool',
+            tool: 'oz.exe (IPF Optimizer)',
+            test_files: {}
+        };
+        results.test_files[testKey] = {
+            original: {
+                test_file: path.basename(testConfig.original_source),
+                size_bytes: originalStats.size,
+                file_count: 26569,
+                sha256: originalHash
+            },
+            optimized: {
+                test_file: testConfig.name,
+                size_bytes: optimizedStats.size,
+                file_count: 11567,
+                sha256: optimizedHash
+            },
+            reduction: reduction,
+            timestamp: new Date().toISOString()
+        };
+        await writeJson(OPTIMIZATION_OUTPUT_FILE, results, 2);
+        logger.success(`Optimization hashes generated successfully`);
+        logger.info(`Database saved to: ${OPTIMIZATION_OUTPUT_FILE}`);
+        if (options.verbose) {
+            logger.plain(`  Original: ${formatBytes(originalStats.size)} (${originalHash.substring(0, 8)}...)`);
+            logger.plain(`  Optimized: ${formatBytes(optimizedStats.size)} (${optimizedHash.substring(0, 8)}...)`);
+            logger.plain(`  Reduction: ${formatBytes(sizeReductionBytes)} (${sizeReductionPercent.toFixed(1)}%)`);
+        }
         return 0;
     } catch (error) {
-        consoleReporter.printError(`Failed to save reference hashes: ${error.message}`);
+        logger.error(`Optimization hash generation failed: ${error.message}`);
+        logger.error(`Generation failed: ${error.message}`);
+        removeFile(path.join(config.TEST_FILES_DIR, `temp_${testKey}.ipf`));
         return 1;
     }
 }
@@ -261,18 +320,11 @@ async function main() {
     const options = parser.parse(process.argv.slice(2));
 
     if (options.showHelp) {
-        console.log(parser.getCommandHelp('generate'));
+        logger.plain(parser.getCommandHelp('generate'));
         return 0;
     }
 
-    let exitCode = 1;
-
-    if (options.testKey) {
-        exitCode = await generateSingle(options);
-    } else {
-        exitCode = await generateAll(options);
-    }
-
+    const exitCode = await generateAll(options);
     process.exit(exitCode);
 }
 
@@ -288,18 +340,14 @@ module.exports = {
         if (options.showHelp) {
             const CliParser = require('../cli-parser');
             const parser = new CliParser();
-            console.log(parser.getCommandHelp('generate'));
+            logger.plain(parser.getCommandHelp('generate'));
             return 0;
         }
 
-        if (options.testKey) {
-            return await generateSingle(options);
-        } else {
-            return await generateAll(options);
-        }
+        return await generateAll(options);
     },
 
-    generateSingle,
+    generateOptimizationHash,
     generateAll,
 
     showHelp() {

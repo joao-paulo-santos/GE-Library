@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-01-19T17:26:44.992Z",
+  "generated_at": "2026-01-22T03:13:58.591Z",
   "purpose": "Reference hashes from original Windows tools (iz.exe + ez.exe)",
   "tool": "Original Windows tools (iz.exe + ez.exe)",
   "test_files": {
@@ -29,7 +29,7 @@
         },
         "manifest_hash": "39eaf84e7604eb3ac38e49c8caf16e6284f100c6a18fe9f435d66d386c088c8c"
       },
-      "timestamp": "2026-01-19T17:26:54.245Z"
+      "timestamp": "2026-01-22T03:14:07.815Z"
     },
     "medium": {
       "test_file": "item_texture.ipf",
@@ -221,7 +221,7 @@
         },
         "sample_hash": "898e2c1b2cb36e6dbe6b7a3a5d2b786ae0b09527a1193756e9b4b5c9eb34a25c"
       },
-      "timestamp": "2026-01-19T17:27:07.850Z"
+      "timestamp": "2026-01-22T03:14:21.299Z"
     },
     "large": {
       "test_file": "ui.ipf",
@@ -413,7 +413,7 @@
         },
         "sample_hash": "24e18422b4a52b9160e96b82e3410ff7d516c5d41c594dd467a09466553d9b53"
       },
-      "timestamp": "2026-01-19T17:27:39.870Z"
+      "timestamp": "2026-01-22T03:14:53.386Z"
     }
   }
 }

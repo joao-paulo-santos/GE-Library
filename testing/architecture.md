@@ -1,10 +1,10 @@
 # Testing Framework Architecture
 
-Technical architecture documentation for the Granado Espada IPF testing framework.
+Technical architecture documentation for Granado Espada IPF testing framework.
 
 ## Overview
 
-The testing framework is a modular JavaScript application that validates IPF tool implementations against original Windows tools using hash-based comparison. The architecture follows strict separation of concerns with clear layers: infrastructure, business logic, generation, and presentation.
+The testing framework is a modular JavaScript application that validates IPF tool implementations against original Windows tools using hash-based comparison. The architecture follows strict separation of concerns with clear layers: infrastructure, business logic, generation, and validation.
 
 ## High-Level Architecture
 
@@ -14,15 +14,14 @@ graph TB
         CLI[CLI Entry Point]
         Parser[CLI Parser]
         Runner[CLI Runner]
-        Reporter[Console Reporter]
         JSONReporter[JSON Reporter]
     end
-
+    
     subgraph "Generation Layer"
         RefGen[Reference Generator]
         HashDB[Hash Database]
     end
-
+    
     subgraph "Validation Layer"
         ExtractVal[Extract Validator]
         CreateVal[Create Validator]
@@ -30,7 +29,7 @@ graph TB
         ConvVal[Convert Validator]
         AddVal[Add Validator]
     end
-
+    
     subgraph "Business Logic Layer"
         HashCalc[Hash Calculator]
         FullStrat[Full Strategy]
@@ -39,7 +38,7 @@ graph TB
         CompResult[Comparison Result]
         DirAnalyzer[Directory Analyzer]
     end
-
+    
     subgraph "Infrastructure Layer"
         Logger[Logger]
         Config[Config]
@@ -47,46 +46,37 @@ graph TB
         FS[Filesystem]
         Executor[Command Executor]
     end
-
+    
     subgraph "External"
         IPF[IPF Files]
         GoBinary[Go IPF Extractor]
         OriginalTools[Original Tools]
     end
-
+    
     CLI --> Parser
     Parser --> Runner
     Runner --> ExtractVal
     Runner --> RefGen
     Runner --> CreateVal
-
+    Runner --> OptVal
+    Runner --> ConvVal
+    Runner --> AddVal
+    
     ExtractVal --> HashCalc
-    HashCalc --> FullStrat
-    HashCalc --> SampleStrat
-    HashCalc --> Hash
-    HashCalc --> DirAnalyzer
-
     ExtractVal --> HashComp
     HashComp --> CompResult
     HashComp --> Hash
-
-    RefGen --> HashDB
+    
     RefGen --> HashCalc
     RefGen --> Executor
     RefGen --> OriginalTools
-
-    Runner --> Reporter
+    RefGen --> HashDB
+    
     Runner --> JSONReporter
-
+    
     Executor --> GoBinary
     Executor --> OriginalTools
-    ExtractVal --> Executor
-    RefGen --> Executor
-
     ExtractVal --> IPF
-    RefGen --> IPF
-    Runner --> Config
-    Runner --> Logger
 ```
 
 ## Module Structure
@@ -123,19 +113,8 @@ testing/
 │   │   ├── hash-database.js
 │   │   └── reference-generator.js
 │   └── presentation/          # User interface
-│       ├── reporting/
-│       │   ├── console-reporter.js
-│       │   └── json-reporter.js
-│       └── cli/
-│           ├── cli-parser.js
-│           ├── cli-runner.js
-│           └── commands/
-│               ├── validate.js
-│               ├── compare.js
-│               ├── generate.js
-│               ├── generateOriginal.js
-│               ├── test.js
-│               └── extract.js
+│       └── reporting/
+│           └── json-reporter.js
 ├── test_files/               # IPF test files
 ├── test_hashes/              # Reference hash databases
 ├── cli.js                   # Main entry point
@@ -172,22 +151,30 @@ testing/
   - `getFileInfo(path)` - File stats
   - `copyFile(src, dest)` - Copy file
   - `moveFile(src, dest)` - Move/rename
+  - `removeFile(path)` - Delete file (with ENOENT handling)
 
 #### executor.js (100-120 lines)
 - Command execution with timeout
 - Cross-platform support
 - Functions:
   - `executeCommand(command, args, options)` - Spawn process
-  - `executeWineCommand(command, args, options)` - Wine wrapper
   - `executeOriginalTool(toolName, args, workingDir)` - iz.exe/ez.exe
   - `executeOurTool(toolPath, args)` - Our compiled binary
 
-#### logger.js (80-100 lines)
-- Configurable logging with multiple sinks
-- Level filtering (debug, info, warn, error)
+#### logger.js (120-150 lines)
+- Centralized logging with console/file output
+- Console output uses symbols (✓ ✗ ⚠ ℹ)
+- File output uses timestamps only
+- Respects log levels (debug, info, warn, error)
+- Sinks: console, file, or both
 - Class `Logger`:
-  - `log(message, level)` - Core logging
-  - `info/warn/error/debug(message)` - Level-specific methods
+  - `log(message, level, symbol)` - Core logging with optional symbol
+  - `info(message)` - Info with ℹ symbol
+  - `success(message)` - Success with ✓ symbol
+  - `warn(message)` - Warning with ⚠ symbol
+  - `error(message)` - Error with ✗ symbol
+  - `debug(message)` - Debug (no symbol, respects level)
+  - `plain(message)` - Raw output (no timestamp, respects level as info)
   - `setLevel(level)` - Change level
   - `setSink(sink)` - Change output
 
@@ -311,17 +298,9 @@ testing/
 
 **Purpose**: User interface and output formatting.
 
-#### reporting/console-reporter.js (80-100 lines)
-- Console output formatting
-- Functions:
-  - `printValidationSummary(summary)` - Overview
-  - `printValidationDetails(results)` - Per-file details
-  - `printComparisonStats(stats)` - Statistics
-  - `printSuccess/Error/Warning/Info(message)` - Formatted output
-
 #### reporting/json-reporter.js (60-80 lines)
 - JSON report generation
-- Functions:
+- Class `JsonReporter`:
   - `generateReport(results, metadata)` - Create report object
   - `saveReport(report, path)` - Write to file
   - `mergeReports(reports)` - Combine multiple reports
@@ -361,17 +340,19 @@ sequenceDiagram
     participant HashCalc
     participant HashComp
     participant Reporter
-
+    
     User->>CLI: npm run validate
     CLI->>Extractor: Extract IPF files
-    Extractor-->>CLI: Extraction output
+    Extractor->>CLI: Extraction output
     CLI->>Validator: Validate against reference
     Validator->>HashCalc: Calculate hashes
-    HashCalc-->>Validator: Our hashes
-    Validator->>HashComp: Compare hashes
-    HashComp-->>Validator: Comparison result
+    HashCalc->>HashComp: Compare hashes
+    HashComp->>CompResult: Comparison result
+    HashComp->>Validator: Our hashes
+    Validator->>HashComp: Comparison result
+    HashComp->>CompResult: Comparison result
     Validator-->>CLI: Validation result
-    CLI->>Reporter: Format output
+    CLI-->>Reporter: Format output
     Reporter-->>User: Validation report
 ```
 
@@ -386,7 +367,7 @@ sequenceDiagram
     participant OriginalTools
     participant HashCalc
     participant HashDB
-
+    
     User->>CLI: npm run generateOriginal
     CLI->>RefGen: Generate reference hashes
     RefGen->>Executor: Run original tools
@@ -396,14 +377,14 @@ sequenceDiagram
     RefGen->>HashCalc: Calculate hashes
     HashCalc-->>RefGen: Reference hashes
     RefGen->>HashDB: Save to database
-    RefGen-->>CLI: Database saved
+    HashDB-->>RefGen: Database saved
+    RefGen-->>CLI: Reference hashes generated
     CLI-->>User: Reference hashes generated
 ```
 
 ## Design Patterns
 
 ### Strategy Pattern
-
 Used in `hash-calculator.js` to support multiple hashing strategies:
 
 ```javascript
@@ -412,10 +393,11 @@ const samplingStrategy = new SamplingStrategy();
 
 const calculator = new HashCalculator(fullStrategy);
 const result = await calculator.calculate('/path/to/dir');
+
+const strategy = calculator.getStrategyName(); // "full" or "sampling"
 ```
 
 ### Command Pattern
-
 Used in CLI commands to encapsulate command logic:
 
 ```javascript
@@ -424,21 +406,12 @@ const exitCode = await commandHandler.execute(parsed.options);
 ```
 
 ### Singleton Pattern
-
 Used in `config.js` for single source of configuration:
 
 ```javascript
 const config = require('../../config');
-```
 
-### Factory Pattern
-
-Used in `hash-calculator.js` to create strategy instances:
-
-```javascript
-function createStrategy(fileCount) {
-    return fileCount <= 100 ? new FullStrategy() : new SamplingStrategy();
-}
+const hashDBPath = config.EXTRACTION_ORIGINAL_HASHES_PATH;
 ```
 
 ## Error Handling
@@ -453,66 +426,20 @@ function createStrategy(fileCount) {
 ### Error Propagation
 
 ```javascript
-// Infrastructure
-try {
-    fs.readFileSync(path);
-} catch (error) {
-    throw new Error(`File not found: ${path}`);
-}
-
-// Business Logic
 try {
     calculateHash(path);
 } catch (error) {
     logger.error(`Hash calculation failed: ${error.message}`);
     return { success: false, error: error.message };
 }
-
-// Presentation
-try {
-    await commandHandler.execute(options);
-} catch (error) {
-    logger.error(`Command failed: ${error.message}`);
-    return 1;
-}
 ```
-
-## Performance Considerations
-
-### Streaming Hashing
-
-Large files are hashed in streams to avoid memory exhaustion:
-
-```javascript
-const hash = crypto.createHash('sha256');
-const stream = fs.createReadStream(path);
-stream.on('data', (data) => hash.update(data));
-```
-
-### Parallel Processing
-
-Hash calculation is parallelized for multiple files:
-
-```javascript
-const hashPromises = files.map(file => calculateFileHash(file));
-const hashes = await Promise.all(hashPromises);
-```
-
-### Smart Strategy Selection
-
-Hash strategy is chosen based on file count to optimize performance:
-
-- **≤100 files**: Full hashing (accurate but slower)
-- **>100 files**: Sampling (fast but statistically representative)
 
 ## Testing
 
 ### Unit Tests
-
 Low-level utilities only (infrastructure layer):
 
 ```javascript
-// test/hash.test.js
 describe('Hash', () => {
     it('should calculate SHA-256 hash', () => {
         const hash = calculateStringHash('test');
@@ -522,7 +449,6 @@ describe('Hash', () => {
 ```
 
 ### Integration Tests
-
 End-to-end testing through CLI commands:
 
 ```bash
@@ -530,6 +456,31 @@ npm test          # Full test suite
 npm run validate  # Validate extraction
 npm run generate  # Generate reference hashes
 ```
+
+## Performance Considerations
+
+### Streaming Hashing
+Large files are hashed in streams to avoid memory exhaustion:
+
+```javascript
+const hash = crypto.createHash('sha256');
+const stream = fs.createReadStream(path);
+stream.on('data', (data) => hash.update(data));
+```
+
+### Parallel Processing
+Hash calculation is parallelized for multiple files:
+
+```javascript
+const hashPromises = files.map(file => calculateFileHash(file));
+const hashes = await Promise.all(hashPromises);
+```
+
+### Smart Strategy Selection
+Hash strategy is chosen based on file count to optimize performance:
+
+- **≤100 files**: Full hashing (accurate but slower)
+- **>100 files**: Sampling (fast but statistically representative)
 
 ## Future Enhancements
 
@@ -552,13 +503,11 @@ The modular architecture allows easy addition of:
 ## Dependencies
 
 ### Runtime Dependencies
-
 - Node.js >= 14.0.0
 - Go binary (built from `src/golang/`)
 - Wine (Linux/Mac only, for original tools)
 
 ### Dev Dependencies
-
 - ESLint (code linting)
 - Jest (unit testing)
 

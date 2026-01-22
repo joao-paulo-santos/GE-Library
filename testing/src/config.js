@@ -21,6 +21,7 @@ module.exports = {
     // Hash databases (organized by tool type)
     EXTRACTION_ORIGINAL_HASHES_PATH: path.join(PROJECT_ROOT, 'testing/test_hashes/tools/extraction/original_hashes.json'),
     EXTRACTION_OUR_HASHES_PATH: path.join(PROJECT_ROOT, 'testing/test_hashes/tools/extraction/our_hashes.json'),
+    OPTIMIZATION_ORIGINAL_HASHES_PATH: path.join(PROJECT_ROOT, 'testing/test_hashes/tools/optimization/original_hashes.json'),
 
     // Hashing strategies
     HASH_STRATEGY_THRESHOLD: 100,  // <=100 files = full, >100 = sampling
@@ -43,17 +44,26 @@ module.exports = {
         small: {
             name: 'ai.ipf',
             source: path.join(PROJECT_ROOT, 'testing/test_files/ai.ipf'),
-            output: path.join(PROJECT_ROOT, 'testing/reference_our/small_our')
+            output: path.join(PROJECT_ROOT, 'testing/reference_our/small_our'),
+            type: 'extraction'
         },
         medium: {
             name: 'item_texture.ipf',
             source: path.join(PROJECT_ROOT, 'testing/test_files/item_texture.ipf'),
-            output: path.join(PROJECT_ROOT, 'testing/reference_our/medium_our')
+            output: path.join(PROJECT_ROOT, 'testing/reference_our/medium_our'),
+            type: 'extraction'
         },
         large: {
             name: 'ui.ipf',
             source: path.join(PROJECT_ROOT, 'testing/test_files/ui.ipf'),
-            output: path.join(PROJECT_ROOT, 'testing/reference_our/large_our')
+            output: path.join(PROJECT_ROOT, 'testing/reference_our/large_our'),
+            type: 'extraction'
+        },
+        ui_optimized: {
+            name: 'ui_optimized.ipf',
+            source: path.join(PROJECT_ROOT, 'testing/test_files/ui_optimized.ipf'),
+            type: 'optimization',
+            original_source: path.join(PROJECT_ROOT, 'testing/test_files/ui.ipf')
         }
     },
 

@@ -3,7 +3,8 @@
  * Single responsibility: Entry point for the CLI tool
  */
 
-const CliRunner = require('./src/cli/cli-runner');
+const path = require('path');
+const CliRunner = require(path.resolve(__dirname, './src/cli/cli-runner'));
 
 async function main() {
     const args = process.argv.slice(2);

@@ -7,38 +7,33 @@
 
 const ExtractValidator = require('../../validation/extract-validator');
 const { fileExists } = require('../../filesystem');
-const ConsoleReporter = require('../../reporting/console-reporter');
+const JsonReporter = require('../../reporting/json-reporter');
 const Logger = require('../../logger');
 const config = require('../../config');
 
 async function validateSingle(options) {
     const logger = new Logger(config.LOG_LEVEL, config.LOG_SINK, config.LOG_FILE);
-    const consoleReporter = new ConsoleReporter(logger);
+    const jsonReporter = new JsonReporter(logger);
 
     if (!options.output || !options.testKey) {
         logger.error('Missing required options: --output and --test-key');
-        consoleReporter.printError('Missing required options: --output and --test-key');
         return 1;
     }
 
     if (!fileExists(options.output)) {
         logger.error(`Output not found: ${options.output}`);
-        consoleReporter.printError(`Output not found: ${options.output}`);
         return 1;
     }
 
-    const referencePath = options.reference || config.EXTRACTION_ORIGINAL_HASHES_PATH;
+    const referencePath = options.reference || config.TEST_HASHES_DIR + '/tools/extraction/original_hashes.json';
 
     if (!fileExists(referencePath)) {
         logger.error(`Reference hashes not found: ${referencePath}`);
-        consoleReporter.printError(`Reference hashes not found: ${referencePath}`);
         return 1;
     }
 
     const validator = new ExtractValidator(referencePath, logger);
     const result = await validator.validate(options.output, options.testKey);
-
-    consoleReporter.printValidationDetails({ [options.testKey]: result });
 
     if (!options.quiet) {
         const summary = {
@@ -47,7 +42,20 @@ async function validateSingle(options) {
             success_rate: result.perfect_match ? 1 : 0
         };
 
-        consoleReporter.printValidationSummary(summary);
+        if (summary.success_rate === 1) {
+            logger.success(`Validation complete: ${summary.successful_validations}/${summary.total_files_tested} tests passed`);
+        } else {
+            logger.error(`Validation failed: ${summary.successful_validations}/${summary.total_files_tested} tests passed (${(summary.success_rate * 100).toFixed(1)}%)`);
+        }
+    }
+
+    if (options.reportJson) {
+        const report = jsonReporter.generateReport({ [options.testKey]: result }, {
+            tool_type: 'extraction'
+        });
+
+        jsonReporter.saveReport(report, options.reportJson);
+        logger.info(`Report saved to: ${options.reportJson}`);
     }
 
     return result.perfect_match ? 0 : 1;
@@ -55,27 +63,25 @@ async function validateSingle(options) {
 
 async function validateMultiple(options) {
     const logger = new Logger(config.LOG_LEVEL, config.LOG_SINK, config.LOG_FILE);
-    const consoleReporter = new ConsoleReporter(logger);
+    const jsonReporter = new JsonReporter(logger);
 
     if (!options.outputMap) {
         logger.error('Missing required option: --output-map');
-        consoleReporter.printError('Missing required option: --output-map');
         return 1;
     }
 
+    let outputMap;
     try {
-        const outputMap = JSON.parse(options.outputMap);
+        outputMap = JSON.parse(options.outputMap);
     } catch (error) {
         logger.error(`Invalid --output-map JSON: ${error.message}`);
-        consoleReporter.printError(`Invalid --output-map JSON: ${error.message}`);
         return 1;
     }
 
-    const referencePath = options.reference || config.EXTRACTION_ORIGINAL_HASHES_PATH;
+    const referencePath = options.reference || config.TEST_HASHES_DIR + '/tools/extraction/original_hashes.json';
 
     if (!fileExists(referencePath)) {
         logger.error(`Reference hashes not found: ${referencePath}`);
-        consoleReporter.printError(`Reference hashes not found: ${referencePath}`);
         return 1;
     }
 
@@ -83,19 +89,19 @@ async function validateMultiple(options) {
     const results = {};
     const keys = Object.keys(outputMap);
 
-    for (const [key, outputPath] of Object.entries(outputMap)) {
-        logger.info(`Validating ${key}...`);
-        const result = await validator.validate(outputPath, key);
-        results[key] = result;
+    for (const [testKey, outputPath] of Object.entries(outputMap)) {
+        logger.info(`Validating ${testKey}...`);
+        const result = await validator.validate(outputPath, testKey);
+        results[testKey] = result;
 
         if (options.verbose) {
             const status = result.perfect_match ? '✓' : '✗';
             const statusText = result.perfect_match ? 'PASS' : 'FAIL';
-            console.log(`  ${status} ${key}: ${statusText}`);
+            logger.plain(`  ${status} ${testKey}: ${statusText}`);
         }
     }
 
-    consoleReporter.printInfo(`Validated ${keys.length} outputs`);
+    logger.info(`Validated ${keys.length} outputs`);
 
     const summary = {
         total_files_tested: keys.length,
@@ -103,7 +109,11 @@ async function validateMultiple(options) {
         success_rate: Object.values(results).filter(r => r.perfect_match).length / keys.length
     };
 
-    consoleReporter.printValidationSummary(summary);
+    if (summary.success_rate === 1) {
+        logger.success(`Validation complete: ${summary.successful_validations}/${summary.total_files_tested} tests passed`);
+    } else {
+        logger.error(`Validation failed: ${summary.successful_validations}/${summary.total_files_tested} tests passed (${(summary.success_rate * 100).toFixed(1)}%)`);
+    }
 
     const { getExitCode } = require('../command-utils');
     return summary.success_rate === 1 ? 0 : 1;
@@ -118,7 +128,7 @@ async function main() {
     const options = parser.parse(args);
 
     if (options.showHelp) {
-        console.log(parser.getCommandHelp('compare'));
+        logger.plain(parser.getCommandHelp('compare'));
         return 0;
     }
 
@@ -130,8 +140,7 @@ async function main() {
         exitCode = await validateMultiple(options);
     } else {
         logger.error('Invalid arguments. Use --help for usage.');
-        const consoleReporter = new ConsoleReporter(logger);
-        consoleReporter.printError('Invalid arguments. Use --help for usage.');
+        return 1;
     }
 
     process.exit(exitCode);
@@ -139,7 +148,6 @@ async function main() {
 
 if (require.main === module) {
     main().catch(err => {
-        const logger = new Logger(config.LOG_LEVEL, config.LOG_SINK, config.LOG_FILE);
         logger.error(`Fatal error: ${err.message}`);
         process.exit(1);
     });
@@ -157,10 +165,7 @@ module.exports = {
         } else if (options.outputMap) {
             return await validateMultiple(options);
         } else {
-            const logger = new Logger(config.LOG_LEVEL, config.LOG_SINK, config.LOG_FILE);
-            const consoleReporter = new ConsoleReporter(logger);
             logger.error('Invalid arguments. Use --help for usage.');
-            consoleReporter.printError('Invalid arguments. Use --help for usage.');
             return 1;
         }
     },

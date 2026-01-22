@@ -3,13 +3,10 @@
 const { executeCommand } = require('../../executor');
 const { calculateDirectoryHash } = require('../../hashing/hash-calculator');
 const { fileExists, ensureDir, removeDir, writeJson } = require('../../filesystem');
-const ConsoleReporter = require('../../reporting/console-reporter');
 const Logger = require('../../logger');
 const config = require('../../config');
-const path = require('path');
 
 const logger = new Logger(config.LOG_LEVEL, config.LOG_SINK, config.LOG_FILE);
-const consoleReporter = new ConsoleReporter(logger);
 
 async function saveOurHashes(ourHashes) {
     const results = {
@@ -20,17 +17,17 @@ async function saveOurHashes(ourHashes) {
     };
 
     await writeJson(config.EXTRACTION_OUR_HASHES_PATH, results, 2);
-    consoleReporter.printInfo(`Our hashes saved to: ${config.EXTRACTION_OUR_HASHES_PATH}`);
+    logger.info(`Our hashes saved to: ${config.EXTRACTION_OUR_HASHES_PATH}`);
 }
 
 async function execute(options) {
-    consoleReporter.printInfo('=== Running Full Extraction Test ===\n');
+    logger.info('=== Running Full Extraction Test ===\n');
 
     const originalReferencePath = config.EXTRACTION_ORIGINAL_HASHES_PATH;
 
     if (!fileExists(originalReferencePath)) {
-        consoleReporter.printError(`Original reference hashes not found: ${originalReferencePath}`);
-        consoleReporter.printInfo('Please run: node cli.js generate');
+        logger.error(`Original reference hashes not found: ${originalReferencePath}`);
+        logger.info('Please run: node cli.js generate');
         return 1;
     }
 
@@ -39,7 +36,7 @@ async function execute(options) {
         originalHashes = await require('fs').promises.readFile(originalReferencePath, 'utf8');
         originalHashes = JSON.parse(originalHashes);
     } catch (error) {
-        consoleReporter.printError(`Failed to load original hashes: ${error.message}`);
+        logger.error(`Failed to load original hashes: ${error.message}`);
         return 1;
     }
 
@@ -50,10 +47,10 @@ async function execute(options) {
     };
 
     for (const [key, fileConfig] of Object.entries(config.TEST_FILES)) {
-        consoleReporter.printInfo(`\n--- Testing ${fileConfig.name} (${key}) ---`);
+        logger.info(`\n--- Testing ${fileConfig.name} (${key}) ---`);
 
         if (!fileExists(fileConfig.source)) {
-            consoleReporter.printError(`Source IPF not found: ${fileConfig.source}`);
+            logger.error(`Source IPF not found: ${fileConfig.source}`);
             results.test_files[key] = {
                 test_file: fileConfig.name,
                 status: 'skipped',
@@ -66,7 +63,7 @@ async function execute(options) {
         try {
             await ensureDir(fileConfig.output);
         } catch (error) {
-            consoleReporter.printError(`Failed to create output directory: ${error.message}`);
+            logger.error(`Failed to create output directory: ${error.message}`);
             results.test_files[key] = {
                 test_file: fileConfig.name,
                 status: 'extraction_failed',
@@ -76,7 +73,7 @@ async function execute(options) {
             continue;
         }
 
-        consoleReporter.printInfo('Extracting with our tool...');
+        logger.info('Extracting with our tool...');
 
         try {
             const startTime = Date.now();
@@ -92,9 +89,9 @@ async function execute(options) {
                 throw new Error(result.error || result.stderr || 'Unknown error');
             }
 
-            consoleReporter.printSuccess(`Extraction completed in ${elapsed}s`);
+            logger.success(`Extraction completed in ${elapsed}s`);
         } catch (error) {
-            consoleReporter.printError(`Extraction failed: ${error.message}`);
+            logger.error(`Extraction failed: ${error.message}`);
             results.test_files[key] = {
                 test_file: fileConfig.name,
                 status: 'extraction_failed',
@@ -104,7 +101,7 @@ async function execute(options) {
             continue;
         }
 
-        consoleReporter.printInfo('Generating hashes from our output...');
+        logger.info('Generating hashes from our output...');
 
         let ourHash;
         try {
@@ -115,7 +112,7 @@ async function execute(options) {
                 timestamp: new Date().toISOString()
             };
         } catch (error) {
-            consoleReporter.printError(`Failed to generate hashes: ${error.message}`);
+            logger.error(`Failed to generate hashes: ${error.message}`);
             results.test_files[key] = {
                 test_file: fileConfig.name,
                 status: 'hash_generation_failed',
@@ -125,11 +122,11 @@ async function execute(options) {
             continue;
         }
 
-        consoleReporter.printInfo('Comparing with original reference hashes...');
+        logger.info('Comparing with original reference hashes...');
 
         const referenceData = originalHashes.test_files[key]?.extracted_files;
         if (!referenceData) {
-            consoleReporter.printError(`No reference data for ${key}`);
+            logger.error(`No reference data for ${key}`);
             results.test_files[key] = {
                 test_file: fileConfig.name,
                 status: 'no_reference',
@@ -150,43 +147,43 @@ async function execute(options) {
         };
 
         if (comparison.perfectMatch) {
-            consoleReporter.printSuccess(`${key}: Perfect match!`);
+            logger.success(`${key}: Perfect match!`);
         } else {
-            consoleReporter.printError(`${key}: Files do not match`);
+            logger.error(`${key}: Files do not match`);
             if (options.verbose && comparison.details.mismatches) {
-                consoleReporter.printInfo(`Mismatches: ${comparison.details.mismatches.length} files`);
+                logger.info(`Mismatches: ${comparison.details.mismatches.length} files`);
             }
         }
     }
 
     await saveOurHashes(ourHashes);
 
-    consoleReporter.printInfo('\n=== Test Summary ===');
+    logger.info('\n=== Test Summary ===');
 
     const totalTests = Object.keys(results.test_files).length;
     const perfectMatches = Object.values(results.test_files).filter(t => t.perfect_match).length;
     const successRate = totalTests > 0 ? (perfectMatches / totalTests) : 0;
 
-    consoleReporter.printInfo(`Total test files: ${totalTests}`);
-    consoleReporter.printInfo(`Perfect matches: ${perfectMatches}`);
-    consoleReporter.printInfo(`Success rate: ${(successRate * 100).toFixed(1)}%`);
+    logger.info(`Total test files: ${totalTests}`);
+    logger.info(`Perfect matches: ${perfectMatches}`);
+    logger.info(`Success rate: ${(successRate * 100).toFixed(1)}%`);
 
     if (!options.keep) {
-        consoleReporter.printInfo('\n=== Cleaning Up ===');
+        logger.info('\n=== Cleaning Up ===');
         for (const [key, fileConfig] of Object.entries(config.TEST_FILES)) {
             if (fileExists(fileConfig.output)) {
                 try {
                     await removeDir(fileConfig.output);
-                    consoleReporter.printInfo(`Removed: ${fileConfig.output}`);
+                    logger.info(`Removed: ${fileConfig.output}`);
                 } catch (error) {
-                    consoleReporter.printError(`Failed to remove ${fileConfig.output}: ${error.message}`);
+                    logger.error(`Failed to remove ${fileConfig.output}: ${error.message}`);
                 }
             }
         }
-        consoleReporter.printInfo('Cleanup complete');
+        logger.info('Cleanup complete');
     } else {
-        consoleReporter.printInfo('\n=== Keeping Extracted Files ===');
-        consoleReporter.printInfo('Extracted files in: reference_our/');
+        logger.info('\n=== Keeping Extracted Files ===');
+        logger.info('Extracted files in: reference_our/');
     }
 
     return successRate === 1 ? 0 : 1;
@@ -263,7 +260,7 @@ Test Files:
 Output:
     - Hashes saved to: test_hashes/tools/extraction/our_hashes.json
     - Extracted files: reference_our/ (cleaned up unless --keep)
-`;
+    `;
 }
 
 module.exports = {
