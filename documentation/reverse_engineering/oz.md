@@ -162,3 +162,20 @@ To match oz.exe output exactly:
 3. Version Made By must be `0x0014` in central directory
 4. File order must preserve original indices of retained files
 5. All compressed data must be copied exactly without modification
+
+## Implementation Notes
+
+**Design Decision**: Our ipf-optimizer was developed to match oz.exe output byte-for-byte to ensure compatibility with existing tools and game clients.
+
+**Important Note**: The way oz.exe handles IPF format may not be optimal:
+
+- **Data Descriptors**: oz.exe uses GenPurpose bit 3 (data descriptor flag) and writes 16-byte data descriptors after compressed data, despite the compressed size being present in the header. This adds 185 KB (11,568 files × 16 bytes) to the archive without providing additional value.
+- **Version Made By**: oz.exe always overwrites to `0x0014` (ZIP 2.0) even when original IPFs have `0x0000` (ZIP 0.0), suggesting unnecessary field modification.
+- **Format Quirks**: Some oz.exe behaviors (like data descriptors with known sizes) appear to be legacy decisions rather than optimal ZIP format usage.
+
+**Future Improvements**: While we currently implement oz.exe's exact behavior for compatibility, we may improve the IPF structure in future versions:
+- Remove redundant data descriptors when compressed size is already known
+- Preserve original Version Made By values
+- Optimize ZIP structure for better compression and smaller archives
+
+For now, byte-for-byte compatibility with oz.exe ensures maximum compatibility while allowing us to validate optimization results.
