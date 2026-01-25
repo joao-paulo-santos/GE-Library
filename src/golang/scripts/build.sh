@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 # Default values
 TARGET="all"
-OUTPUT_DIR="dist"
+OUTPUT_DIR="../../../releases/ge-library"
 VERSION=""
 RACE=false
 VERBOSE=false

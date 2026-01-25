@@ -18,7 +18,7 @@ LDFLAGS=-ldflags "-s -w -X main.AppVersion=$(shell date -u +'%Y-%m-%d_%H:%M:%S')
 
 # Directories
 BUILD_DIR=build
-DIST_DIR=dist
+DIST_DIR=../../releases/ge-library
 
 # Default target
 .PHONY: all
@@ -41,13 +41,13 @@ test-coverage:
 	$(GOTEST) -v -coverprofile=coverage.out ./...
 	$(GOCMD) tool cover -html=coverage.out -o coverage.html
 
-# Build for current platform
+# Build for current platform (auto-detect)
 .PHONY: build
 build:
-	@echo "Building for $(GOOS)/$(GOARCH)..."
-	mkdir -p $(BUILD_DIR)
-	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME_EXTRACTOR) ./cmd/ipf-extractor
-	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME_OPTIMIZER) ./cmd/ipf-optimizer
+	@echo "Building for $(shell go env GOOS)/$(shell go env GOARCH)..."
+	@mkdir -p $(DIST_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)
+	CGO_ENABLED=0 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)/$(BINARY_NAME_EXTRACTOR) ./cmd/ipf-extractor
+	CGO_ENABLED=0 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)/$(BINARY_NAME_OPTIMIZER) ./cmd/ipf-optimizer
 
 # Build for all platforms
 .PHONY: build-all
@@ -66,35 +66,40 @@ build-linux:
 build-linux-arm64:
 	@echo "Building for Linux arm64..."
 	mkdir -p $(DIST_DIR)/linux-arm64
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/linux-arm64/$(BINARY_NAME) ./cmd/ipf-extractor
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/linux-arm64/$(BINARY_NAME_EXTRACTOR) ./cmd/ipf-extractor
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/linux-arm64/$(BINARY_NAME_OPTIMIZER) ./cmd/ipf-optimizer
 
 # Build for Windows (amd64)
 .PHONY: build-windows
 build-windows:
 	@echo "Building for Windows amd64..."
 	mkdir -p $(DIST_DIR)/windows-amd64
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/windows-amd64/$(BINARY_NAME).exe ./cmd/ipf-extractor
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/windows-amd64/$(BINARY_NAME_EXTRACTOR).exe ./cmd/ipf-extractor
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/windows-amd64/$(BINARY_NAME_OPTIMIZER).exe ./cmd/ipf-optimizer
 
 # Build for Windows (arm64)
 .PHONY: build-windows-arm64
 build-windows-arm64:
 	@echo "Building for Windows arm64..."
 	mkdir -p $(DIST_DIR)/windows-arm64
-	CGO_ENABLED=0 GOOS=windows GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/windows-arm64/$(BINARY_NAME).exe ./cmd/ipf-extractor
+	CGO_ENABLED=0 GOOS=windows GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/windows-arm64/$(BINARY_NAME_EXTRACTOR).exe ./cmd/ipf-extractor
+	CGO_ENABLED=0 GOOS=windows GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/windows-arm64/$(BINARY_NAME_OPTIMIZER).exe ./cmd/ipf-optimizer
 
 # Build for macOS (amd64)
 .PHONY: build-darwin
 build-darwin:
 	@echo "Building for macOS amd64..."
 	mkdir -p $(DIST_DIR)/darwin-amd64
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/darwin-amd64/$(BINARY_NAME) ./cmd/ipf-extractor
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/darwin-amd64/$(BINARY_NAME_EXTRACTOR) ./cmd/ipf-extractor
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/darwin-amd64/$(BINARY_NAME_OPTIMIZER) ./cmd/ipf-optimizer
 
 # Build for macOS (arm64)
 .PHONY: build-darwin-arm64
 build-darwin-arm64:
 	@echo "Building for macOS arm64..."
 	mkdir -p $(DIST_DIR)/darwin-arm64
-	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/darwin-arm64/$(BINARY_NAME) ./cmd/ipf-extractor
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/darwin-arm64/$(BINARY_NAME_EXTRACTOR) ./cmd/ipf-extractor
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/darwin-arm64/$(BINARY_NAME_OPTIMIZER) ./cmd/ipf-optimizer
 
 # Build release versions
 .PHONY: release
@@ -103,9 +108,9 @@ release: clean deps test build-linux build-linux-arm64 build-windows build-windo
 	cd $(DIST_DIR) && for dir in */; do \
 		platform=$${dir%/}; \
 		if [[ $$platform == windows* ]]; then \
-			zip -r $$platform.zip $$dir; \
+			zip -r ge-library-$$platform.zip $$dir; \
 		else \
-			tar -czf $$platform.tar.gz $$dir; \
+			tar -czf ge-library-$$platform.tar.gz $$dir; \
 		fi; \
 	done
 	@echo "Release packages created in $(DIST_DIR)"
@@ -139,7 +144,14 @@ profile:
 clean:
 	$(GOCLEAN)
 	rm -rf $(BUILD_DIR)
-	rm -rf $(DIST_DIR)
+	if [[ -d "$(DIST_DIR)" ]]; then \
+		mkdir -p /tmp/ge-library-original-backup; \
+		mv $(DIST_DIR)/original/* /tmp/ge-library-original-backup/ 2>/dev/null || true; \
+		rm -rf $(DIST_DIR); \
+		mkdir -p $(DIST_DIR); \
+		mv /tmp/ge-library-original-backup/* $(DIST_DIR)/original/; \
+		rm -rf /tmp/ge-library-original-backup; \
+	fi
 	rm -f coverage.out coverage.html
 
 # Format code

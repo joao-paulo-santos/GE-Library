@@ -38,6 +38,105 @@ This project provides two complementary implementations:
 - **Advantages**: Multi-threaded, memory-efficient, cross-platform binaries
 - **Use Case**: Large-scale extractions, automation, and production workflows
 
+### Build System
+
+#### Build Locations
+All binaries are built to `releases/ge-library/` with platform-specific subdirectories:
+
+```
+releases/ge-library/
+├── linux-amd64/     # Linux 64-bit
+├── linux-arm64/     # Linux ARM64
+├── windows-amd64/   # Windows 64-bit
+├── windows-arm64/   # Windows ARM64
+├── darwin-amd64/    # macOS 64-bit
+└── darwin-arm64/    # macOS ARM64
+```
+
+#### Quick Build (Current Platform)
+
+**Option 1: Using build.sh (recommended)**
+```bash
+# Auto-build for current platform
+./build.sh
+
+# Build all platforms
+./build.sh all
+
+# Build specific platform
+./build.sh linux-amd64
+./build.sh windows-amd64
+```
+
+**Option 2: Using Makefile**
+```bash
+cd src/golang
+
+# Auto-build for current platform
+make build
+
+# Build all platforms
+make build-all
+```
+
+#### Platform Configuration
+
+Testing framework uses explicit platform configuration in `testing/src/config.js`:
+
+```javascript
+// Linux AMD64 developer
+module.exports = {
+    PLATFORM_TARGET: 'linux-amd64',
+    get OPTIMIZER_PATH() {
+        return path.join(PROJECT_ROOT, 'releases/ge-library/linux-amd64/ipf-optimizer');
+    }
+};
+
+// Windows AMD64 developer
+module.exports = {
+    PLATFORM_TARGET: 'windows-amd64',
+    get OPTIMIZER_PATH() {
+        return path.join(PROJECT_ROOT, 'releases/ge-library/windows-amd64/ipf-optimizer.exe');
+    }
+};
+```
+
+#### Release Archives
+
+Builds create ready-to-distribute archives:
+
+- **Unix platforms**: `ge-library-{platform}.tar.gz`
+- **Windows platforms**: `ge-library-{platform}.zip`
+
+Extracted folders contain tools ready to copy to game directory.
+
+#### Build Options
+
+```bash
+# Clean old builds
+./build.sh clean
+
+# Verbose build
+./build.sh --verbose current
+
+# Build with version string
+./build.sh -v 1.0.0 linux-amd64
+
+# Help
+./build.sh --help
+```
+
+#### Testing Framework
+
+Build latest tools before running tests:
+
+```bash
+cd testing
+./build-tools.sh
+```
+
+This builds to `releases/ge-library/{platform}/` based on `PLATFORM_TARGET` config.
+
 ## Performance Architecture
 
 ### Single-Pass Optimization

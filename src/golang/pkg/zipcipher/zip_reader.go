@@ -17,28 +17,28 @@ const centralDirSignature = 0x02014b50
 
 // LocalFileHeader represents a ZIP local file header
 type LocalFileHeader struct {
-	Signature          uint32
-	VersionNeeded      uint16
-	BitFlag            uint16
-	CompressionMethod  uint16
-	LastModTime        uint16
-	LastModDate        uint16
-	CRC32              uint32
-	CompressedSize     uint32
-	UncompressedSize   uint32
-	FilenameLength     uint16
-	ExtraFieldLength   uint16
-	Filename           []byte
-	ExtraField         []byte
+	Signature         uint32
+	VersionNeeded     uint16
+	BitFlag           uint16
+	CompressionMethod uint16
+	LastModTime       uint16
+	LastModDate       uint16
+	CRC32             uint32
+	CompressedSize    uint32
+	UncompressedSize  uint32
+	FilenameLength    uint16
+	ExtraFieldLength  uint16
+	Filename          []byte
+	ExtraField        []byte
 }
 
 // EncryptedFileReader provides reading and decryption of ZIP files with IPF passwords
 type EncryptedFileReader struct {
-	reader     io.ReadSeeker
-	password   []byte
-	cipher     *ZipCipher
-	header     LocalFileHeader
-	dataStart  int64
+	reader    io.ReadSeeker
+	password  []byte
+	cipher    *ZipCipher
+	header    LocalFileHeader
+	dataStart int64
 }
 
 // NewEncryptedFileReader creates a new reader for password-protected ZIP files

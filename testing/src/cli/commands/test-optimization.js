@@ -11,7 +11,7 @@ const { countIPFFiles } = require('../../count-ipf-files');
 
 const logger = new Logger(config.LOG_LEVEL, config.LOG_SINK, config.LOG_FILE);
 
-const OPTIMIZER_BIN = config.OPTIMIZER_PATH;
+const OPTIMIZER_BIN = config.OPTIMIZER_PATH();
 const OPTIMIZATION_ORIGINAL_HASHES = config.OPTIMIZATION_ORIGINAL_HASHES_PATH;
 const OPTIMIZATION_OUR_HASHES = config.OPTIMIZATION_OUR_HASHES_PATH;
 

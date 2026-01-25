@@ -1,33 +1,19 @@
 #!/bin/bash
 
-# Build Go tools to bin/ directory for testing
-# This ensures tests always use the latest built versions
+# Build Go tools from root for testing
+# This ensures tests always use latest built versions from releases/ge-library/
 
 set -e
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/../.."
 
 echo "=== Building Go Tools for Testing ==="
+echo ""
 
-# Clean bin directory
-if [ -d "bin" ]; then
-    echo "Cleaning bin/..."
-    rm -rf bin
-fi
-
-mkdir -p bin
-
-echo "Building ipf-extractor..."
-cd ../src/golang
-go build -ldflags "-s -w" -o ../../bin/ipf-extractor ./cmd/ipf-extractor
-
-echo "Building ipf-optimizer..."
-go build -ldflags "-s -w" -o ../../bin/ipf-optimizer ./cmd/ipf-optimizer
-
-cd ../..
+# Call root build script (auto-detects current platform)
+./build.sh
 
 echo ""
 echo "✓ Build complete!"
-echo "Binaries:"
-ls -lh bin/
-  
+echo "✓ Testing tools updated to latest!"
+echo "✓ Config points to: releases/ge-library/$PLATFORM_TARGET/"
