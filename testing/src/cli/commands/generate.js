@@ -13,6 +13,7 @@ const { ensureDir, removeDir, writeJson, getFileInfo, copyFile, moveFile, remove
 const path = require('path');
 const Logger = require('../../logger');
 const config = require('../../config');
+const { countIPFFiles } = require('../../count-ipf-files');
 
 const logger = new Logger(config.LOG_LEVEL, config.LOG_SINK, config.LOG_FILE);
 
@@ -269,10 +270,14 @@ async function generateOptimizationHash(testConfig, testKey, options) {
 
         const sizeReductionBytes = originalStats.size - optimizedStats.size;
         const sizeReductionPercent = (sizeReductionBytes / originalStats.size) * 100;
+
+        const optimizedFileCount = countIPFFiles(testConfig.source);
+        const originalFileCount = countIPFFiles(testConfig.original_source);
+
         const reduction = {
             size_reduction_bytes: sizeReductionBytes,
             size_reduction_percent: Math.round(sizeReductionPercent * 10) / 10,
-            file_reduction_count: 15002
+            file_reduction_count: originalFileCount - optimizedFileCount
         };
 
         const results = {
@@ -285,13 +290,13 @@ async function generateOptimizationHash(testConfig, testKey, options) {
             original: {
                 test_file: path.basename(testConfig.original_source),
                 size_bytes: originalStats.size,
-                file_count: 26569,
+                file_count: originalFileCount,
                 sha256: originalHash
             },
             optimized: {
                 test_file: testConfig.name,
                 size_bytes: optimizedStats.size,
-                file_count: 11567,
+                file_count: optimizedFileCount,
                 sha256: optimizedHash
             },
             reduction: reduction,

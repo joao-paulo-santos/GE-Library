@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-01-22T03:13:58.591Z",
+  "generated_at": "2026-01-24T21:10:40.463Z",
   "purpose": "Reference hashes from original Windows tools (iz.exe + ez.exe)",
   "tool": "Original Windows tools (iz.exe + ez.exe)",
   "test_files": {
@@ -29,7 +29,7 @@
         },
         "manifest_hash": "39eaf84e7604eb3ac38e49c8caf16e6284f100c6a18fe9f435d66d386c088c8c"
       },
-      "timestamp": "2026-01-22T03:14:07.815Z"
+      "timestamp": "2026-01-24T21:10:49.764Z"
     },
     "medium": {
       "test_file": "item_texture.ipf",
@@ -221,14 +221,14 @@
         },
         "sample_hash": "898e2c1b2cb36e6dbe6b7a3a5d2b786ae0b09527a1193756e9b4b5c9eb34a25c"
       },
-      "timestamp": "2026-01-22T03:14:21.299Z"
+      "timestamp": "2026-01-24T21:11:03.397Z"
     },
     "large": {
       "test_file": "ui.ipf",
       "extracted_files": {
         "strategy": "sampling",
-        "file_count": 11567,
-        "total_size": 1726508670,
+        "file_count": 11568,
+        "total_size": 1726657932,
         "sampled_files": {
           "6464.bmp": {
             "hash": "bb1fec53ab84bf9925c585aa53d90018c273a891fa0b054cff9f48eb65c2bf70",
@@ -290,10 +290,6 @@
             "hash": "e898dfb7eabe6f252e41e602bc5fd98ce4c304bcf5fdc606a5f0036a29309d2f",
             "size": 19254
           },
-          "illust/it_r_normal49.bmp": {
-            "hash": "1b6889c6a6e660d0d84cd48c9bc6f35697d4690ad00737c78c85b2e45462f512",
-            "size": 12344
-          },
           "illust/it_r_normal50.bmp": {
             "hash": "d4370a3817e74a0ce8cc21de8c25f61dc13eaff3aa6394533618282d011ee359",
             "size": 12344
@@ -348,6 +344,10 @@
           },
           "illust/it_w_2019hwbook.bmp": {
             "hash": "37f74b358544d76948f2f2aa5a70151b6affb6546d843ffb9ae0f10a5277fd8c",
+            "size": 12344
+          },
+          "illust/it_w_2019hwcannon.bmp": {
+            "hash": "bd30a9611ae58fea1ade389d4619d67654030a0d92ed91d10bc151365655d5e9",
             "size": 12344
           },
           "uixml/worldpvpreward.xml": {
@@ -411,9 +411,9 @@
             "size": 65287
           }
         },
-        "sample_hash": "24e18422b4a52b9160e96b82e3410ff7d516c5d41c594dd467a09466553d9b53"
+        "sample_hash": "e3f58add1979b69b2fbbb7e55c6b06b95956a8b9a487573a1dc117a7e9e52f59"
       },
-      "timestamp": "2026-01-22T03:14:53.386Z"
+      "timestamp": "2026-01-24T21:11:35.351Z"
     }
   }
 }

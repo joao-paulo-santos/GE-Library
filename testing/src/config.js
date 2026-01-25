@@ -15,7 +15,8 @@ module.exports = {
     PROJECT_ROOT,
     TEST_FILES_DIR: path.join(PROJECT_ROOT, 'testing/test_files'),
     TEST_HASHES_DIR: path.join(PROJECT_ROOT, 'testing/test_hashes'),
-    EXTRACTOR_PATH: path.join(PROJECT_ROOT, 'src/golang/build/ipf-extractor'),
+    EXTRACTOR_PATH: path.join(PROJECT_ROOT, 'bin/ipf-extractor'),
+    OPTIMIZER_PATH: path.join(PROJECT_ROOT, 'bin/ipf-optimizer'),
     ORIGINAL_TOOLS_DIR: path.join(PROJECT_ROOT, 'releases/original/bin'),
     
     // Hash databases (organized by tool type)
