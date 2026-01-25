@@ -9,8 +9,9 @@ GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
 
 # Binary names
-BINARY_NAME=ipf-extractor
-BINARY_UNIX=$(BINARY_NAME)_unix
+BINARY_NAME_EXTRACTOR=ipf-extractor
+BINARY_NAME_OPTIMIZER=ipf-optimizer
+BINARY_UNIX=$(BINARY_NAME_EXTRACTOR)_unix
 
 # Build flags
 LDFLAGS=-ldflags "-s -w -X main.AppVersion=$(shell date -u +'%Y-%m-%d_%H:%M:%S')"
@@ -45,7 +46,8 @@ test-coverage:
 build:
 	@echo "Building for $(GOOS)/$(GOARCH)..."
 	mkdir -p $(BUILD_DIR)
-	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/ipf-extractor
+	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME_EXTRACTOR) ./cmd/ipf-extractor
+	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME_OPTIMIZER) ./cmd/ipf-optimizer
 
 # Build for all platforms
 .PHONY: build-all
@@ -56,7 +58,8 @@ build-all: clean deps build-linux build-windows build-darwin
 build-linux:
 	@echo "Building for Linux amd64..."
 	mkdir -p $(DIST_DIR)/linux-amd64
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/linux-amd64/$(BINARY_NAME) ./cmd/ipf-extractor
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/linux-amd64/$(BINARY_NAME_EXTRACTOR) ./cmd/ipf-extractor
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/linux-amd64/$(BINARY_NAME_OPTIMIZER) ./cmd/ipf-optimizer
 
 # Build for Linux (arm64)
 .PHONY: build-linux-arm64
@@ -111,7 +114,8 @@ release: clean deps test build-linux build-linux-arm64 build-windows build-windo
 .PHONY: dev
 dev:
 	mkdir -p $(BUILD_DIR)
-	$(GOBUILD) -race -o $(BUILD_DIR)/$(BINARY_NAME)-dev ./cmd/ipf-extractor
+	$(GOBUILD) -race -o $(BUILD_DIR)/$(BINARY_NAME_EXTRACTOR)-dev ./cmd/ipf-extractor
+	$(GOBUILD) -race -o $(BUILD_DIR)/$(BINARY_NAME_OPTIMIZER)-dev ./cmd/ipf-optimizer
 
 # Run with development build
 .PHONY: run
