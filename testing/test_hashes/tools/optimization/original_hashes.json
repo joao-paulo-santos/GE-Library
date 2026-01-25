@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-01-24T21:11:42.999Z",
+  "purpose": "Reference hashes from oz.exe optimization tool",
+  "tool": "oz.exe (IPF Optimizer)",
+  "test_files": {
+    "ui_optimized": {
+      "original": {
+        "test_file": "ui.ipf",
+        "size_bytes": 921510028,
+        "file_count": 26571,
+        "sha256": "b8aa830cc9ee5c079f467bc01a22c35d0fe91745617b40603dbf89ff6e623e31"
+      },
+      "optimized": {
+        "test_file": "ui_optimized.ipf",
+        "size_bytes": 441422642,
+        "file_count": 11568,
+        "sha256": "0fdb99878d34721c1da93e5b6fd04590e84613aa93c1da5870db2a99adc40f44"
+      },
+      "reduction": {
+        "size_reduction_bytes": 480087386,
+        "size_reduction_percent": 52.1,
+        "file_reduction_count": 15003
+      },
+      "timestamp": "2026-01-24T21:11:42.999Z"
+    }
+  }
+}

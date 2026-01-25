@@ -11,17 +11,17 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/ipf-extractor/ipf-extractor/pkg/workers"
-	"github.com/ipf-extractor/ipf-extractor/pkg/zipcipher"
+	"github.com/joao-paulo-santos/GE-Library/pkg/workers"
+	"github.com/joao-paulo-santos/GE-Library/pkg/zipcipher"
 )
 
 // ExtractionTask represents a file extraction task
 type ExtractionTask struct {
-	FileInfo   *FileInfo
-	OutputDir  string
-	ZipReader  *zip.ReadCloser
-	Index      int
-	Password   []byte
+	FileInfo  *FileInfo
+	OutputDir string
+	ZipReader *zip.ReadCloser
+	Index     int
+	Password  []byte
 }
 
 // ExtractionResult represents the result of extracting a file
@@ -38,7 +38,7 @@ type ExtractionResult struct {
 type ExtractionTiming struct {
 	IPFDecryption     time.Duration
 	ExtractDecryption time.Duration
-	IO               time.Duration
+	IO                time.Duration
 }
 
 // ConcurrentExtractor handles parallel file extraction
@@ -73,11 +73,12 @@ func (ce *ConcurrentExtractor) ExtractSingle(task ExtractionTask) ExtractionResu
 		}
 	}
 
-	// Just use the output path directly - overwrite existing files
+	// Build output path
 	finalPath := filepath.Join(task.OutputDir, task.FileInfo.SafeFilename)
 
 	// Always use custom decryption for IPF files
 	extractedData, err := ce.extractWithCustomDecryption(task)
+
 	if err != nil {
 		return ExtractionResult{
 			Index:   task.Index,
@@ -214,16 +215,21 @@ func (ce *ConcurrentExtractor) ExtractAllParallel(ctx context.Context, outputDir
 		return nil, fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	// Create extraction tasks
-	tasks := make([]ExtractionTask, len(fileInfos))
-	for i, fileInfo := range fileInfos {
-		tasks[i] = ExtractionTask{
+	// Handle IPF progressive bloat: keep only newest version of each file
+	// Use Deduplicator module to filter duplicate filenames
+	deduplicator := NewDeduplicator(fileInfos)
+	deduplicatedFileInfos := deduplicator.Run()
+
+	// Create extraction tasks only for files we want to keep (unique, newest versions)
+	tasks := make([]ExtractionTask, 0, len(deduplicatedFileInfos))
+	for _, fileInfo := range deduplicatedFileInfos {
+		tasks = append(tasks, ExtractionTask{
 			FileInfo:  &fileInfo,
 			OutputDir: outputDir,
 			ZipReader: ce.zipReader,
-			Index:     i,
+			Index:     fileInfo.Index,
 			Password:  password,
-		}
+		})
 	}
 
 	// Create parallel processor
@@ -243,7 +249,6 @@ func (ce *ConcurrentExtractor) ExtractBatch(ctx context.Context, outputDir strin
 	// For simplicity, delegate to the main parallel extraction function
 	return ce.ExtractAllParallel(ctx, outputDir, password)
 }
-
 
 // getTimeMillis returns current time in milliseconds
 func getTimeMillis() int64 {

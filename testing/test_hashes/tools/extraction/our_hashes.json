@@ -1,0 +1,419 @@
+{
+  "generated_at": "2026-01-22T03:15:45.732Z",
+  "purpose": "Hashes from our Go IPF extractor",
+  "tool": "Our Go IPF extractor",
+  "test_files": {
+    "small": {
+      "test_file": "ai.ipf",
+      "extracted_files": {
+        "strategy": "full",
+        "file_count": 4,
+        "total_size": 28871,
+        "files": {
+          "attacker.scp": {
+            "hash": "072104f3f33b4d54e14755aba4be788d2822a4a2db144dc3748a91ec084fd4ef",
+            "size": 11442
+          },
+          "healer.scp": {
+            "hash": "6090a10e789e03b0f381d5c86169ccf2b3e041ca5cc8d674ce4bc61f97e19855",
+            "size": 6086
+          },
+          "lib.scp": {
+            "hash": "bc70a19cbe96e6b8adc24df425bab7fe7806fe1d5de0d40dfe20c7bc28205468",
+            "size": 5235
+          },
+          "puppet.scp": {
+            "hash": "fd6c2d446104a97874740ec6bc3d607855399e3ef39d94f1b0157e206f9cabbd",
+            "size": 6108
+          }
+        },
+        "manifest_hash": "39eaf84e7604eb3ac38e49c8caf16e6284f100c6a18fe9f435d66d386c088c8c"
+      },
+      "timestamp": "2026-01-22T03:15:43.514Z"
+    },
+    "medium": {
+      "test_file": "item_texture.ipf",
+      "extracted_files": {
+        "strategy": "sampling",
+        "file_count": 3063,
+        "total_size": 290435566,
+        "sampled_files": {
+          "2018Worldcapwing_1.dds": {
+            "hash": "0e9b0022f1ac51c33562f13b98eba95828099e646a8518ba54264b623ccca023",
+            "size": 349680
+          },
+          "2018Worldcapwing_1_pinkLeaf.dds": {
+            "hash": "4cb15627224497fd59ac510b0d1e0b0b2bbfc79aca67c4fc702993e3706dd584",
+            "size": 87536
+          },
+          "2018Worldcapwing_1_pinkLeaf2.dds": {
+            "hash": "b302133015f823a05f7b4375c117a27d8f74c355db7583ae3e4ffad9536749c6",
+            "size": 87536
+          },
+          "2018Worldcapwing_2.dds": {
+            "hash": "9a6e5d71676928ef7cab411406f93042419835a6f6b05052829c6c0e565bff39",
+            "size": 349680
+          },
+          "2018Worldcapwing_2_WhiteLeaf.dds": {
+            "hash": "c437db24673c5a51547a7701ea63604ab4012ae2a7c980b47bfd7b736f52ad5b",
+            "size": 87536
+          },
+          "2018Worldcapwing_2_WhiteLeaf2.dds": {
+            "hash": "0712053ecc45340a0bdf968f13de3cf6ff10066f66381597fed40c59a8db454f",
+            "size": 87536
+          },
+          "Dolores_hair.dds": {
+            "hash": "63e135601325297c93b79635a42bafed224c1b38b1ca603ea074bd85c37c8dc7",
+            "size": 349680
+          },
+          "Dolores_hat.dds": {
+            "hash": "eb792cfe3f3dbed1b718ca95f56e03256421b553fc567c8925ccd492ae56b38e",
+            "size": 87536
+          },
+          "It_Mus_f_m_armarmor_B.dds": {
+            "hash": "c1e7f46918a74704c03d35622f61d7dbd3191c659800a7bd5099ba582f76ae56",
+            "size": 22000
+          },
+          "It_W_Eff_Earth_char.dds": {
+            "hash": "db24b26c3525238b387cad410a8a4fef695e44346f52c3f421492a71c01d78a5",
+            "size": 22000
+          },
+          "It_W_Eff_flame_text.dds": {
+            "hash": "db24b26c3525238b387cad410a8a4fef695e44346f52c3f421492a71c01d78a5",
+            "size": 22000
+          },
+          "It_e_fanaticlegguard.dds": {
+            "hash": "ac0af401643a6b0f790c95e6195d47f8c416a227839e6e937c328566f7280175",
+            "size": 22000
+          },
+          "It_e_fanaticmail.dds": {
+            "hash": "44530220a49da74d70cdcafa8ed307c32916078b2999a350b65599cbeb758940",
+            "size": 22000
+          },
+          "It_e_fanaticneckband_set_e.dds": {
+            "hash": "7483af68ce7c0306297c055a9bf68c2937dd416437c78cc760ae15869f9989e9",
+            "size": 5616
+          },
+          "It_e_grayfeather.dds": {
+            "hash": "00509e48fd770ed1919d59d4371855fb74de08556d860ae436d777d58101c416",
+            "size": 22000
+          },
+          "it_m_kalidhat.dds": {
+            "hash": "522feeaa32b2a764005501b5d8bc5b17bbd4ba2b1be9043be9f90772d912ced9",
+            "size": 87536
+          },
+          "it_m_kanocostumehair1.dds": {
+            "hash": "63c9aa99c97570a322335b3a97bd32d6892efa45ce314461aed3c52b11adc352",
+            "size": 22000
+          },
+          "it_m_kanohat.dds": {
+            "hash": "9257af336094056708e0955b0cbcd5442fdeab839d5ca4f363ca7168b660dd29",
+            "size": 22000
+          },
+          "it_m_kanosummerhair.DDS": {
+            "hash": "fe178351e2765e2a550d28ff4e362c10e3bc12fcc9afbdd33ffebd49edf42d8f",
+            "size": 349680
+          },
+          "it_m_kevin_hat.dds": {
+            "hash": "088fa2c7982525f5381baad1cf7f931a97e4292d3db11cccd55430f00ba2a935",
+            "size": 5616
+          },
+          "it_m_kichunegamen.dds": {
+            "hash": "3d6e4fdaa38ec55ca2616321d3097c9b10a80c80ac3e2a9c3e5c10f831305343",
+            "size": 22000
+          },
+          "it_m_koreanclotheshat.dds": {
+            "hash": "209298e10f2c284ebd2bf7a8639ac2e619775503471a170e7a7cf7f7417132bc",
+            "size": 87536
+          },
+          "it_m_lacoiffuredu.dds": {
+            "hash": "65825b8d2542cad3a47880925488de11ebc577236d59a351e17c5b759a83fc6e",
+            "size": 87536
+          },
+          "it_m_laranjaepreto.dds": {
+            "hash": "5102d6c262fcbcb0df31e7c453643fb8b2851cff3aa7c199ea4cb3a48c28074a",
+            "size": 87536
+          },
+          "it_m_laurarockstarcos_hat.DDS": {
+            "hash": "57cab480f3a084557c4731dcc60b0c7f31beef6507ad2652c395665acd2909c0",
+            "size": 22000
+          },
+          "it_m_laurarockstarcoshair.dds": {
+            "hash": "2cd9571612d462b7fd4d8ed47f4e39238b8c01826dfefe11b1bbe8f17b2439ae",
+            "size": 22000
+          },
+          "it_m_lavenderhat_01.dds": {
+            "hash": "524404461839e1fd42bbee65cde253fadc64d70e3b0d4b7871c6ce5917161ca9",
+            "size": 22000
+          },
+          "it_m_lavenderhat_02.dds": {
+            "hash": "80fe67d6a272e2d290d20ceb7f00f435e0defd1b7be84bd6d4e3acb7c5230c42",
+            "size": 5616
+          },
+          "it_m_layerbob.dds": {
+            "hash": "7802d6eb2077ea4242f6a314ca14bbe26910b6a9af00bfd36c56461819550479",
+            "size": 87536
+          },
+          "it_m_leather_armor.dds": {
+            "hash": "747140086ad7a21ffa2066bbece537ae87cceaec25207a8f9abe54c734629a8a",
+            "size": 87536
+          },
+          "sunglass_lenz_sct_m.dds": {
+            "hash": "af0e4e33289d816ee2ec78f08eb680410011d0bae038285ae798195df4044b72",
+            "size": 87536
+          },
+          "sunglass_war_m.dds": {
+            "hash": "2c60f14573d43ed15180313a407d7b49235ff13d08c0e7ce45ad9d5a4ccbe481",
+            "size": 87536
+          },
+          "t_w_skullicsword_e.dds": {
+            "hash": "c49dc387ce4342331629d7df76edb142f5d78afef54d3ed7f50a0879df34fc35",
+            "size": 43920
+          },
+          "t_w_wolverinesword.dds": {
+            "hash": "7a325379d9577aa0c2b52c05fadad02d061e304cc41b638dcf5b50be62c7986e",
+            "size": 43856
+          },
+          "t_w_wolverinesword_black.dds": {
+            "hash": "7a325379d9577aa0c2b52c05fadad02d061e304cc41b638dcf5b50be62c7986e",
+            "size": 43856
+          },
+          "t_w_wolverinesword_blue.dds": {
+            "hash": "08d5b4ca65518740b68af8796bb3e9e4fff713929b5cd936cd8d11e7b43fa2e7",
+            "size": 43856
+          },
+          "t_w_wolverinesword_red.dds": {
+            "hash": "75e447ba789352fbfe113eb6a86d436f220923d372508b0c0a9672261b8eedd1",
+            "size": 43856
+          },
+          "ti_e_whiteangel.dds": {
+            "hash": "b4fe0c9f42001f909b60427387bb6101788da0d687bffd4b3df6df5ed47f695a",
+            "size": 174928
+          },
+          "tree_leaf.dds": {
+            "hash": "06ed935ad73a49fdb1d1350eea94330f2f43e1d77b572e90cab7f65bf2f054fa",
+            "size": 87536
+          },
+          "tree_treepot.dds": {
+            "hash": "27d85685379b8dbf51a333816c4f598b4d55398a98d2a79166b498bb86ee0512",
+            "size": 5616
+          },
+          "vokeheffect.dds": {
+            "hash": "a5b13d93f6ddd4d7371e1a1101dc36c77010e6779baae47be1c040147ccd4bce",
+            "size": 87536
+          },
+          "wiz_body_m_redserpent5_01.DDS": {
+            "hash": "899719d8cd7ac410e256f830c040ff2e224c418d4d11ef25f9326582b0de948c",
+            "size": 349680
+          },
+          "wiz_body_m_redserpent5_02.DDS": {
+            "hash": "bbbe846ff5ccf8c78837fee46ae2bba95be1b2ecf6a7fde47036c5f282e6fbdd",
+            "size": 349680
+          },
+          "wiz_m_capitainehair.dds": {
+            "hash": "1b2f0e3ec30a60779434c0e68729377f74f638efce68f085e5eadd36aa888df6",
+            "size": 87536
+          },
+          "wiz_m_operahat.dds": {
+            "hash": "d84702a8b245f76fd3b0b32f644c890028f037708c6060f891f217ad12ed69db",
+            "size": 87536
+          }
+        },
+        "sample_hash": "898e2c1b2cb36e6dbe6b7a3a5d2b786ae0b09527a1193756e9b4b5c9eb34a25c"
+      },
+      "timestamp": "2026-01-22T03:15:44.074Z"
+    },
+    "large": {
+      "test_file": "ui.ipf",
+      "extracted_files": {
+        "strategy": "sampling",
+        "file_count": 11567,
+        "total_size": 1726508670,
+        "sampled_files": {
+          "6464.bmp": {
+            "hash": "bb1fec53ab84bf9925c585aa53d90018c273a891fa0b054cff9f48eb65c2bf70",
+            "size": 12344
+          },
+          "6464_faction.bmp": {
+            "hash": "d667717de426da79d80d9a42837cc58e0f22e88d6fcd8ab4f5c29ef037842a86",
+            "size": 12344
+          },
+          "BarrackPortrait/CLeonele_m_barrack_off.bmp": {
+            "hash": "80a6e58e04629190d24ec7cb1b67ed4f4b25e915eb145dcb4bb424bea3741b1a",
+            "size": 19256
+          },
+          "BarrackPortrait/CLeonele_m_barrack_on.bmp": {
+            "hash": "786962f6343945e5254723356e499c52aded9b3faff3a24dc7f671a21319d5a9",
+            "size": 19256
+          },
+          "BarrackPortrait/Neolith_m_barrack_off.bmp": {
+            "hash": "6515652f657e67a812dc6fee44365d12aea756e139ece4affc6b129a84007b27",
+            "size": 19256
+          },
+          "BarrackPortrait/Neolith_m_barrack_on.bmp": {
+            "hash": "e517a4fa194be4a81e5fb313f31977a5f58c91fd6ab9341f3d8609efbf05db7d",
+            "size": 19256
+          },
+          "BarrackPortrait/Roreta_f_barrack_off.bmp": {
+            "hash": "5ec5be72baa728b8a12740e31d7ee2f90525db33b1769f39c1ce44e8e65e40d1",
+            "size": 19256
+          },
+          "BarrackPortrait/Roreta_f_barrack_on.bmp": {
+            "hash": "8aea55235565fc6d73d152a58e6192a4f6a006369fd02d13a8efc202718555bd",
+            "size": 19256
+          },
+          "BarrackPortrait/aclla_f_barrack_off.bmp": {
+            "hash": "9c530c2c0651691a8862fa741d4fae57b77235600d2f734a69420f3aa31627bf",
+            "size": 19256
+          },
+          "BarrackPortrait/aclla_f_barrack_on.bmp": {
+            "hash": "a003d26c2fc2e6b12dd764b3c42087e81249d9055173fd2fe82beecd0cfc882a",
+            "size": 19256
+          },
+          "BarrackPortrait/adelina2_f_barrack_off.bmp": {
+            "hash": "a69d2b2cf49d1da6c084e69ee5ed1d8371549a5b2602dad401bdbeb6764caf5e",
+            "size": 19254
+          },
+          "BarrackPortrait/adelina2_f_barrack_on.bmp": {
+            "hash": "637a7f49f22aefa0764f3bde53300ba8027dc2dfcd5483236c01a3f969f7c117",
+            "size": 19254
+          },
+          "BarrackPortrait/adelina_f_barrack_off.bmp": {
+            "hash": "a69d2b2cf49d1da6c084e69ee5ed1d8371549a5b2602dad401bdbeb6764caf5e",
+            "size": 19254
+          },
+          "BarrackPortrait/adelina_f_barrack_on.bmp": {
+            "hash": "637a7f49f22aefa0764f3bde53300ba8027dc2dfcd5483236c01a3f969f7c117",
+            "size": 19254
+          },
+          "BarrackPortrait/adelinapirate_f_barrack_off.bmp": {
+            "hash": "e898dfb7eabe6f252e41e602bc5fd98ce4c304bcf5fdc606a5f0036a29309d2f",
+            "size": 19254
+          },
+          "illust/it_r_normal49.bmp": {
+            "hash": "1b6889c6a6e660d0d84cd48c9bc6f35697d4690ad00737c78c85b2e45462f512",
+            "size": 12344
+          },
+          "illust/it_r_normal50.bmp": {
+            "hash": "d4370a3817e74a0ce8cc21de8c25f61dc13eaff3aa6394533618282d011ee359",
+            "size": 12344
+          },
+          "illust/it_t_char_twn01.bmp": {
+            "hash": "14a684a0a70b945d571470c0255e8573abb476b0f4a58be2923dc2dcab74470f",
+            "size": 12344
+          },
+          "illust/it_t_char_twn02.bmp": {
+            "hash": "5ddbcbfb4ab1170d1d5b86dba38e012d7180c0ab1060ea7c6715b772045ed626",
+            "size": 12344
+          },
+          "illust/it_t_char_twn03.bmp": {
+            "hash": "a6cfb331c4abbc5d33c337737d65810e7b8605e36b36271fde68061e68e8a370",
+            "size": 12344
+          },
+          "illust/it_t_char_twn04.bmp": {
+            "hash": "09a5dbd078024092ad2c42531ec9d71f1886910e8bbb2c330836b1a6ae2ba924",
+            "size": 12344
+          },
+          "illust/it_t_char_twn05.bmp": {
+            "hash": "90b7d9345be0a0ff09acb35d591b1f90b2ff3667adb7313e32c14dedf81e4183",
+            "size": 12344
+          },
+          "illust/it_t_char_twn06.bmp": {
+            "hash": "b1608dd2e89e65280e5c70eab42faee791e9bc1c8966bd3c13cbe22faaafe38b",
+            "size": 16440
+          },
+          "illust/it_t_char_twn07.bmp": {
+            "hash": "e148f461086c925b7571ef40f8df1390401011acd65d67f15b346c45c8c39c3e",
+            "size": 16440
+          },
+          "illust/it_t_char_twn08.bmp": {
+            "hash": "d912286eb8edf02e85f0d2a488baef469a05c4e36f57d387859314d597c9b0ab",
+            "size": 16440
+          },
+          "illust/it_t_char_twn09.bmp": {
+            "hash": "dded27920951d8d7096e0b3e005ec73f00630a2ed260f74833812315cf7687fa",
+            "size": 16440
+          },
+          "illust/it_v_vis.bmp": {
+            "hash": "e8874197ca0d4cceb27a51aff7d5889e393674f7b77f15acd0b0366293a42da9",
+            "size": 12344
+          },
+          "illust/it_w_201909_wp01_pistol.bmp": {
+            "hash": "f54d64ad14d5f913934d8d8717e4f76666488c8b978cc663fef9e78cd1fce9c5",
+            "size": 12344
+          },
+          "illust/it_w_201909_wp02_firebracelet.bmp": {
+            "hash": "0ed9210356304a7d8c43cacc210929689980762a91aab909f5c0635418458ee9",
+            "size": 12344
+          },
+          "illust/it_w_2019hwbook.bmp": {
+            "hash": "37f74b358544d76948f2f2aa5a70151b6affb6546d843ffb9ae0f10a5277fd8c",
+            "size": 12344
+          },
+          "uixml/worldpvpreward.xml": {
+            "hash": "57d9f2cac196d4c4cdada84c02822b31a509543438c78492dda63f2662510d7e",
+            "size": 2232
+          },
+          "uixml/worldpvpteam.xml": {
+            "hash": "a4a24d536f40284890d66f7459ad724e7af814304e50314bb689cc6e56bcc27a",
+            "size": 1575
+          },
+          "worldmap.jpg": {
+            "hash": "643f529243f1d145dd310be5b30465342aef10a7c65ca9f26101f191d6add706",
+            "size": 854321
+          },
+          "worldmap_granado.jpg": {
+            "hash": "2a5abbc8da3fab337450621090a2971d2de3ff33dc96d7a8b5a5cb7018f60005",
+            "size": 835714
+          },
+          "worldmap_granado_btn.jpg": {
+            "hash": "d9a47a9626c76e7d7d9d930cf4c139babafcbe45d99be9cda9cca9ccad991c91",
+            "size": 922805
+          },
+          "worldmap_orpesia.jpg": {
+            "hash": "c7c8efde4e86cca0e6827017892c7f1cdde292200236ebb10d62929dd5a9c7bb",
+            "size": 497856
+          },
+          "worldmap_orpesia_btn.jpg": {
+            "hash": "c3bbb53a08fafb934420d418176c074495baf78d9d34cf99bbaeedd333776381",
+            "size": 502376
+          },
+          "worldmap_wcc.jpg": {
+            "hash": "150e5b72428406cf04469a5d537021ecbf47d11291d2fddd26aa99c40be5f336",
+            "size": 680658
+          },
+          "worldmap_wcc_btn.jpg": {
+            "hash": "880a37466c2dd8a782a276f98614f5f072ad7e5224236ad5cf27934adee0087b",
+            "size": 683960
+          },
+          "worldmapbutton.jpg": {
+            "hash": "d9a47a9626c76e7d7d9d930cf4c139babafcbe45d99be9cda9cca9ccad991c91",
+            "size": 922805
+          },
+          "worldmapquest.bmp": {
+            "hash": "2ab7c46daf1ed857042fa1321f6d39afd46f7df07592ccc1576f68d17a89eaa7",
+            "size": 49208
+          },
+          "worldpvp_slot.bmp": {
+            "hash": "14b62a7d9ff7e0d121ae3db95bba52ac50607d869e96fd6e0baacf83033c686f",
+            "size": 98360
+          },
+          "worldpvprank.bmp": {
+            "hash": "3fdc5304af0ad96ba71eecb492363bc8d4dff4bd14247f0ab15c986bba4c53a4",
+            "size": 98360
+          },
+          "worldpvprank.dds": {
+            "hash": "95b20730ebb4201b1e6162044dc85ce384e93c2aa489e67fe94287c9a9ed131c",
+            "size": 24704
+          },
+          "worldpvprank.jpg": {
+            "hash": "85eb058be92c95d2191ab448fcbbcaffaa571dda304ee547de5dce595c20099b",
+            "size": 65287
+          }
+        },
+        "sample_hash": "24e18422b4a52b9160e96b82e3410ff7d516c5d41c594dd467a09466553d9b53"
+      },
+      "timestamp": "2026-01-22T03:15:45.731Z"
+    }
+  }
+}
