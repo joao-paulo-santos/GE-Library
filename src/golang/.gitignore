@@ -1,5 +1,4 @@
 # Go build artifacts
-ipf-extractor
 *.exe
 *.dll
 *.so
