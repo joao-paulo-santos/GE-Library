@@ -23,6 +23,7 @@ module.exports = {
     EXTRACTION_ORIGINAL_HASHES_PATH: path.join(PROJECT_ROOT, 'testing/test_hashes/tools/extraction/original_hashes.json'),
     EXTRACTION_OUR_HASHES_PATH: path.join(PROJECT_ROOT, 'testing/test_hashes/tools/extraction/our_hashes.json'),
     OPTIMIZATION_ORIGINAL_HASHES_PATH: path.join(PROJECT_ROOT, 'testing/test_hashes/tools/optimization/original_hashes.json'),
+    OPTIMIZATION_OUR_HASHES_PATH: path.join(PROJECT_ROOT, 'testing/test_hashes/tools/optimization/our_hashes.json'),
 
     // Hashing strategies
     HASH_STRATEGY_THRESHOLD: 100,  // <=100 files = full, >100 = sampling
