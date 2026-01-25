@@ -11,13 +11,19 @@ import (
 
 // FileInfo represents a file within the IPF archive
 type FileInfo struct {
-	Index              int
-	ZipInfo            *zip.File
-	EncryptedFilename  []byte
-	DecryptedFilename  string
-	SafeFilename       string
-	LocalHeaderOffset  int64
-	EncryptedNameLen   uint16
+	Index             int
+	ZipInfo           *zip.File
+	EncryptedFilename []byte
+	DecryptedFilename string
+	SafeFilename      string
+	LocalHeaderOffset int64
+	EncryptedNameLen  uint16
+	HeaderSize        uint32
+	ExtraLen          uint16
+	ExtraField        []byte
+	VersionNeeded     uint16
+	VersionMadeBy     uint16
+	GenPurpose        uint16
 }
 
 // IPFReader provides high-performance reading of IPF files
@@ -97,52 +103,59 @@ func (r *IPFReader) ReadEncryptedFilenames() error {
 	for i := range r.FileInfos {
 		headerOffset := r.FileInfos[i].LocalHeaderOffset
 
-		// Read filename length from local header (offset 26 from start of local header)
-		nameLenPos := headerOffset + 26
-		if nameLenPos+2 > fileSize {
-			continue // Skip invalid header
-		}
-
-		// Seek to filename length position
-		_, err := mmap.Seek(nameLenPos, io.SeekStart)
+		// Seek to start of header
+		_, err := mmap.Seek(headerOffset, io.SeekStart)
 		if err != nil {
-			continue // Skip on seek error
+			continue
 		}
 
-		// Read filename length (2 bytes, little endian)
-		nameLenBytes := make([]byte, 2)
-		_, err = io.ReadFull(mmap, nameLenBytes)
-		if err != nil {
-			continue // Skip on read error
+		// Read first 30 bytes of local header
+		headerBytes := make([]byte, 30)
+		if _, err := io.ReadFull(mmap, headerBytes); err != nil {
+			continue
 		}
 
-		nameLen := binary.LittleEndian.Uint16(nameLenBytes)
+		// Parse version fields
+		r.FileInfos[i].VersionNeeded = binary.LittleEndian.Uint16(headerBytes[4:6])
+		r.FileInfos[i].GenPurpose = binary.LittleEndian.Uint16(headerBytes[6:8])
 
-		// Validate filename length (reasonable bounds)
+		// Parse filename and extra field lengths
+		nameLen := binary.LittleEndian.Uint16(headerBytes[26:28])
+		extraLen := binary.LittleEndian.Uint16(headerBytes[28:30])
+
+		// Validate filename length
 		if nameLen == 0 || nameLen > 512 {
-			continue // Skip invalid length
+			continue
+		}
+
+		// Check if header fits in file
+		if headerOffset+30+int64(nameLen)+int64(extraLen) > fileSize {
+			continue
 		}
 
 		// Read encrypted filename data
-		filenamePos := headerOffset + 30 // Local header + filename position
-		if filenamePos+int64(nameLen) > fileSize {
-			continue // Skip if filename would be beyond file
-		}
-
-		_, err = mmap.Seek(filenamePos, io.SeekStart)
-		if err != nil {
-			continue // Skip on seek error
-		}
-
 		encryptedName := make([]byte, nameLen)
-		_, err = io.ReadFull(mmap, encryptedName)
-		if err != nil {
-			continue // Skip on read error
+		if _, err := io.ReadFull(mmap, encryptedName); err != nil {
+			continue
 		}
 
 		// Update file info with encrypted filename data
 		r.FileInfos[i].EncryptedFilename = encryptedName
 		r.FileInfos[i].EncryptedNameLen = nameLen
+		r.FileInfos[i].HeaderSize = uint32(30) + uint32(nameLen) + uint32(extraLen)
+
+		// Read extra field data (if present)
+		var extraField []byte
+		if extraLen > 0 {
+			extraField = make([]byte, extraLen)
+			if _, err := io.ReadFull(mmap, extraField); err != nil {
+				continue
+			}
+		}
+
+		// Update file info with extra field data
+		r.FileInfos[i].ExtraLen = extraLen
+		r.FileInfos[i].ExtraField = extraField
 	}
 
 	return nil
