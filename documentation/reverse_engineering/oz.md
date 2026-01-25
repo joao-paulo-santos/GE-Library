@@ -105,4 +105,60 @@ The tool reads and validates standard ZIP header structures:
 - **Central Directory Header** (46 bytes + variable)
 - **End of Central Directory** (22 bytes)
 
-Reads CRC32 values (offset 14 in local header) and filename data (offset 30) from each file.
+ Reads CRC32 values (offset 14 in local header) and filename data (offset 30) from each file.
+
+## Critical Format Details Discovered
+
+### General Purpose Flags
+- **Local File Headers**: `0x0009` (bit 0 = encrypted, bit 3 = data descriptor)
+- **Central Directory**: `0x0009` (same as local headers)
+
+### Data Descriptors
+- **Size**: 16 bytes per file (appended after compressed data)
+- **Structure**:
+  - Offset 0-3: Signature `0x08074b50`
+  - Offset 4-7: CRC32
+  - Offset 8-11: Compressed Size
+  - Offset 12-15: Uncompressed Size
+- **Purpose**: Despite GenPurpose bit 3 being set, oz.exe writes data descriptors after all files
+
+### Version Made By Field
+- **Value**: `0x0014` (ZIP 2.0) in all optimized IPF central directory entries
+- **Original IPFs**: Typically have `0x0000` (ZIP 0.0)
+- **Note**: oz.exe always overwrites this field to `0x0014` during optimization
+
+### Central Directory Structure
+Standard 46-byte entries with proper alignment:
+- Internal attributes: 2 bytes at offset 32 (always 0)
+- External attributes: 4 bytes at offset 36 (always 0)
+- Local header offset: 4 bytes at offset 40 (correctly set)
+
+## Optimization Statistics
+
+### Example Results (ui.ipf)
+- **Original**: 26,571 files (879 MB)
+- **Optimized**: 11,568 files (421 MB)
+- **Removed**: 15,003 duplicate files (56.5% reduction)
+- **Size Reduction**: 458 MB (52.1%)
+
+## File Reconstruction Process
+
+1. Read all file structures into memory
+2. Identify duplicate filenames
+3. Retain highest-indexed version of each file
+4. Rebuild ZIP structure:
+   - Local file headers (with GenPurpose = 0x0009)
+   - Compressed data (copied byte-for-byte)
+   - Data descriptors (16 bytes per file)
+   - Central directory entries (with Version Made By = 0x0014)
+   - End of central directory
+5. Truncate file to new size
+
+## Byte-for-Byte Compatibility Requirements
+
+To match oz.exe output exactly:
+1. GenPurpose flags must be `0x0009` (not `0x0001`)
+2. Data descriptors must be written (16 bytes per file)
+3. Version Made By must be `0x0014` in central directory
+4. File order must preserve original indices of retained files
+5. All compressed data must be copied exactly without modification
