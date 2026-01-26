@@ -107,11 +107,7 @@ release: clean deps test build-linux build-linux-arm64 build-windows build-windo
 	@echo "Creating release packages..."
 	cd $(DIST_DIR) && for dir in */; do \
 		platform=$${dir%/}; \
-		if [[ $$platform == windows* ]]; then \
-			zip -r ge-library-$$platform.zip $$dir; \
-		else \
-			tar -czf ge-library-$$platform.tar.gz $$dir; \
-		fi; \
+		7z a -tzip ge-library-$$platform.zip $$dir > /dev/null; \
 	done
 	@echo "Release packages created in $(DIST_DIR)"
 
@@ -144,14 +140,7 @@ profile:
 clean:
 	$(GOCLEAN)
 	rm -rf $(BUILD_DIR)
-	if [[ -d "$(DIST_DIR)" ]]; then \
-		mkdir -p /tmp/ge-library-original-backup; \
-		mv $(DIST_DIR)/original/* /tmp/ge-library-original-backup/ 2>/dev/null || true; \
-		rm -rf $(DIST_DIR); \
-		mkdir -p $(DIST_DIR); \
-		mv /tmp/ge-library-original-backup/* $(DIST_DIR)/original/; \
-		rm -rf /tmp/ge-library-original-backup; \
-	fi
+	rm -rf $(DIST_DIR)
 	rm -f coverage.out coverage.html
 
 # Format code

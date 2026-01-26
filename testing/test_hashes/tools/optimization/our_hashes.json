@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-01-25T15:21:41.791Z",
+  "generated_at": "2026-01-25T19:43:43.980Z",
   "purpose": "Hashes from our ipf-optimizer tool",
   "tool": "ipf-optimizer (Go implementation)",
   "test_files": {
@@ -16,7 +16,7 @@
         "count_match": true,
         "perfect_match": true
       },
-      "timestamp": "2026-01-25T15:21:41.792Z"
+      "timestamp": "2026-01-25T19:43:43.980Z"
     }
   }
 }
