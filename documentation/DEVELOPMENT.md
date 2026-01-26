@@ -45,30 +45,17 @@ All binaries are built to `releases/ge-library/` with platform-specific subdirec
 
 ```
 releases/ge-library/
-├── linux-amd64/     # Linux 64-bit
-├── linux-arm64/     # Linux ARM64
-├── windows-amd64/   # Windows 64-bit
-├── windows-arm64/   # Windows ARM64
-├── darwin-amd64/    # macOS 64-bit
-└── darwin-arm64/    # macOS ARM64
+ ├── linux-amd64/tools/     # Linux 64-bit
+ ├── linux-arm64/tools/     # Linux ARM64
+ ├── windows-amd64/tools/   # Windows 64-bit
+ ├── windows-arm64/tools/   # Windows ARM64
+ ├── darwin-amd64/tools/    # macOS 64-bit
+ └── darwin-arm64/tools/    # macOS ARM64
 ```
 
 #### Quick Build (Current Platform)
 
-**Option 1: Using build.sh (recommended)**
-```bash
-# Auto-build for current platform
-./build.sh
-
-# Build all platforms
-./build.sh all
-
-# Build specific platform
-./build.sh linux-amd64
-./build.sh windows-amd64
-```
-
-**Option 2: Using Makefile**
+**Using Makefile**
 ```bash
 cd src/golang
 
@@ -77,6 +64,9 @@ make build
 
 # Build all platforms
 make build-all
+
+# Build complete release (all platforms + packages)
+make release
 ```
 
 #### Platform Configuration
@@ -87,16 +77,16 @@ Testing framework uses explicit platform configuration in `testing/src/config.js
 // Linux AMD64 developer
 module.exports = {
     PLATFORM_TARGET: 'linux-amd64',
-    get OPTIMIZER_PATH() {
-        return path.join(PROJECT_ROOT, 'releases/ge-library/linux-amd64/ipf-optimizer');
+    get EXTRACTOR_PATH() {
+        return path.join(PROJECT_ROOT, 'releases/ge-library/linux-amd64/tools/ipf-extractor');
     }
 };
 
 // Windows AMD64 developer
 module.exports = {
     PLATFORM_TARGET: 'windows-amd64',
-    get OPTIMIZER_PATH() {
-        return path.join(PROJECT_ROOT, 'releases/ge-library/windows-amd64/ipf-optimizer.exe');
+    get EXTRACTOR_PATH() {
+        return path.join(PROJECT_ROOT, 'releases/ge-library/windows-amd64/tools/ipf-extractor.exe');
     }
 };
 ```
@@ -105,25 +95,32 @@ module.exports = {
 
 Builds create ready-to-distribute archives:
 
-- **Unix platforms**: `ge-library-{platform}.tar.gz`
-- **Windows platforms**: `ge-library-{platform}.zip`
+- **All platforms**: `ge-library-{platform}.zip`
 
-Extracted folders contain tools ready to copy to game directory.
+Extracted folders contain:
+```
+ge-library/
+├── tools/              # Binary executables
+│   ├── ipf-extractor (or .exe)
+│   └── ipf-optimizer (or .exe)
+├── README.txt          # User documentation
+└── PATCHNOTES.txt     # Release notes (last 5 releases)
+```
 
 #### Build Options
 
 ```bash
 # Clean old builds
-./build.sh clean
+make clean
 
-# Verbose build
-./build.sh --verbose current
+# Verbose build (not needed, make shows progress)
+make build
 
-# Build with version string
-./build.sh -v 1.0.0 linux-amd64
+# Generate release files
+make generate-release-files
 
-# Help
-./build.sh --help
+# Build complete release
+make release
 ```
 
 #### Testing Framework
@@ -131,11 +128,11 @@ Extracted folders contain tools ready to copy to game directory.
 Build latest tools before running tests:
 
 ```bash
-cd testing
-./build-tools.sh
+cd src/golang
+make build
 ```
 
-This builds to `releases/ge-library/{platform}/` based on `PLATFORM_TARGET` config.
+This builds to `releases/ge-library/{platform}/tools/` for the current platform.
 
 ## Performance Architecture
 

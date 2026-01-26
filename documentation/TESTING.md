@@ -279,7 +279,8 @@ npm install
 
 ```bash
 cd ../src/golang
-go build -o build/ipf-extractor ./cmd/ipf-extractor
+make build
+# Binary built to: releases/ge-library/{platform}/tools/ipf-extractor
 ```
 
 ### Run Tests
@@ -333,7 +334,7 @@ Error: Command failed: spawn ENOENT
 
 ```bash
 cd src/golang
-go build -o build/ipf-extractor ./cmd/ipf-extractor
+make build
 ```
 
 ### Permission Denied
@@ -345,7 +346,7 @@ Error: EACCES: permission denied
 **Solution**: Make binary executable:
 
 ```bash
-chmod +x src/golang/build/ipf-extractor
+chmod +x src/golang/releases/ge-library/linux-amd64/tools/ipf-extractor
 ```
 
 ### Timeout Errors

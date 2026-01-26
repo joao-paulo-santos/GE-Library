@@ -18,6 +18,10 @@
 !documentation/
 !documentation/**
 
+# Whitelist workflows directory
+!workflows/
+!workflows/**
+
 # Whitelist benchmarks directory
 !benchmarks/
 !benchmarks/**
