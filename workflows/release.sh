@@ -134,17 +134,6 @@ main() {
     fi
     info "✓ No uncommitted changes"
     
-    # Check for jq
-    if ! command -v jq &> /dev/null; then
-        error "jq is not installed (required for parsing JSON)"
-        echo ""
-        echo "Install jq:"
-        echo "  macOS:   brew install jq"
-        echo "  Ubuntu:  sudo apt-get install jq"
-        echo "  Fedora:  sudo dnf install jq"
-        exit 1
-    fi
-    info "✓ jq is installed"
     
     # Check gh CLI
     if ! command -v gh &> /dev/null; then
@@ -177,11 +166,13 @@ main() {
         error "Release notes file not found: $RELEASE_NOTES_FILE"
         exit 1
     fi
-    
-    version=$(jq -r '.releases[-1].version' "$RELEASE_NOTES_FILE")
-    release_type=$(jq -r '.releases[-1].type' "$RELEASE_NOTES_FILE")
-    release_date=$(jq -r '.releases[-1].date' "$RELEASE_NOTES_FILE")
-    
+
+    # Extract version using Node (absolute path)
+    abs_json_path="$(pwd)/documentation/release_notes/release_notes.json"
+    version=$(node -p "require('$abs_json_path').releases.at(-1).version")
+    release_type=$(node -p "require('$abs_json_path').releases.at(-1).type")
+    release_date=$(node -p "require('$abs_json_path').releases.at(-1).date")
+
     # Validate version format (accepts 0.1, 1.0.0, etc.)
     if ! [[ "$version" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
         error "Invalid version format: $version"
@@ -328,24 +319,15 @@ main() {
     # 7. Generate Version-Specific Release Notes
     # ============================================================================
     step "Generating release notes..."
-    
+
     release_notes_temp=$(mktemp)
 
-    jq -r '
-      .releases[-1] |
-      "## Version \(.version) - \(.date)\n" +
-      "**Type:** \(.type)\n\n" +
-      (if .changes then "### Changes\n" + ([.changes[] | "• \(.)"] | join("\n")) + "\n\n" else "") +
-      (if .performance then "### Performance\n\(.performance)\n\n" else "") +
-      (if .known_issues then "### Known Issues\n" + ([.known_issues[] | "• \(.)"] | join("\n")) + "\n" else "")
-    ' "$RELEASE_NOTES_FILE" > "$release_notes_temp"
-    
+    # Generate markdown notes for latest version using Node script
     if [ "$DRY_RUN" = true ]; then
-        dry_run "Release notes generated (preview):"
-        echo ""
-        cat "$release_notes_temp" | sed 's/^/  /'
-        echo ""
+        dry_run "Would generate release notes for version $version"
+        dry_run "Using: node workflows/generate_patchnotes.js --latest --output $release_notes_temp"
     else
+        node "$SCRIPT_DIR/generate_patchnotes.js" --latest --output "$release_notes_temp"
         info "✓ Release notes generated"
     fi
     
