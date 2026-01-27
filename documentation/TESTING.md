@@ -4,7 +4,7 @@ This document covers testing procedures to validate our Granado Espada Tool Libr
 
 ## Current Project Status
 
-Our project aims to recreate the complete getools.bat tool suite. Currently, we've completed IPF extraction and are working on the remaining tools: IPF creation, optimization, IES conversion, and folder management.
+Our project aims to recreate the complete getools.bat tool suite. Currently, we've completed IPF extraction and IPF optimization, and are working on the remaining tools: IPF creation, IES conversion, and folder management.
 
 ## Testing Framework
 
@@ -67,17 +67,14 @@ The testing framework provides npm scripts for easy validation:
 ```bash
 cd testing
 
-# Run full test suite (extract all test files and validate)
+# Run all tests (extraction + optimization)
 npm test
 
-# Validate extraction output
-npm run validate
+# Run extraction tests only
+npm run test:extraction
 
-# Validate with verbose output
-npm run validate:verbose
-
-# Run extractor only
-npm run extract -- test_files/ai.ipf output_dir
+# Run optimization tests only
+npm run test:optimization
 ```
 
 All commands support `--help` flag for usage information.
@@ -87,11 +84,12 @@ All commands support `--help` flag for usage information.
 The framework is designed for CI/CD pipelines:
 
 ```bash
-# Silent mode for automated pipelines
-npm run validate --quiet
+# Run all tests (non-zero exit code on any failure)
+npm test
 
-# Non-zero exit code on any failure (exit 1 for failures, 0 for success)
-npm run test
+# Run specific test suites
+npm run test:extraction
+npm run test:optimization
 ```
 
 ### For Maintainers - Generate Reference Hashes
@@ -104,13 +102,14 @@ cd testing
 # Generate reference hashes from original tool extractions
 npm run generate
 
-# This runs iz.exe + ez.exe on all test files and saves:
+# This runs iz.exe + ez.exe on extraction test files and oz.exe on optimization test files, saving:
 # - testing/test_hashes/tools/extraction/original_hashes.json (hash database)
+# - testing/test_hashes/tools/optimization/original_hashes.json (hash database)
 # - testing/reference_original/ (extracted files)
 ```
 
 Platform Requirements:
-- **Windows**: Native execution of iz.exe and ez.exe tools
+- **Windows**: Native execution of iz.exe, ez.exe, and oz.exe tools
 - **Linux/Mac**: Wine installed and configured for Windows tool execution
 
 ## Future Tool Testing (In Progress)
@@ -118,7 +117,6 @@ Platform Requirements:
 ### Upcoming Tools to Test
 
 - **IPF Creation** (`cz.exe` + `zi.exe` replication)
-- **IPF Optimization** (`oz.exe` replication)
 - **IES Conversion** (`ix3.exe` replication)
 - **Folder Addition** (`af.exe` replication)
 
@@ -161,13 +159,17 @@ Verifies consistent behavior across Linux, Windows, and macOS for users who can'
 - **IPF Extraction**: Full validation against `iz.exe` + `ez.exe`
   - Test files: ai.ipf, item_texture.ipf, ui.ipf
   - Validation rate: 100% success
-  - Performance: 10-15x faster than original tools
+  - Performance: Faster than original tools (10-15x when tested under Wine)
+
+- **IPF Optimization**: Full validation against `oz.exe`
+  - Test files: ui.ipf → ui_optimized.ipf
+  - Validation rate: 100% success (hash, size, file count all match)
+  - Performance: Optimizes duplicate file removal
 
 ### In Progress
 
 - **IPF Creation**: Validation against `cz.exe` + `zi.exe`
 - **IES Conversion**: Validation against `ix3.exe`
-- **IPF Optimization**: Validation against `oz.exe`
 - **Folder Management**: Validation against `af.exe`
 
 ## Test Data Structure
@@ -184,9 +186,9 @@ The framework stores reference hashes in `testing/test_hashes/`:
 - `testing/reference_original/` - Extractions from original Windows tools (iz.exe + ez.exe) - Permanent storage
 - `testing/reference_our/` - Extractions from our Go tool - Temporary, cleaned up after tests unless `--keep` flag used
 
-### Future Scalability
+### Hash Database Structure
 
-As additional tools are implemented, hash database structure will expand:
+The hash database structure supports all implemented tools:
 ```
 test_hashes/tools/
 ├── extraction/
@@ -207,7 +209,7 @@ test_hashes/tools/
 
 Key metrics tracked during testing:
 
-- Extraction/creation speed (10-15x faster than original tools)
+- Extraction/creation speed (faster than original tools, 10-15x when tested under Wine)
 - Memory usage during operations (streaming, no memory exhaustion)
 - Hash validation success rate (100% on all test files)
 - Deduplication effectiveness (removes obsolete file versions)
@@ -290,38 +292,6 @@ cd ../../testing
 npm test
 ```
 
-### Expected Output
-
-```
-=== Running Full Extraction Test ===
-
---- Testing ai.ipf (small) ---
-Extracting with our tool...
-✓ Extraction completed in 0.01s
-Generating hashes from our output...
-Comparing with reference hashes...
-✓ small: Perfect match!
-
---- Testing item_texture.ipf (medium) ---
-Extracting with our tool...
-✓ Extraction completed in 0.54s
-Generating hashes from our output...
-Comparing with reference hashes...
-✓ medium: Perfect match!
-
---- Testing ui.ipf (large) ---
-Extracting with our tool...
-✓ Extraction completed in 1.79s
-Generating hashes from our output...
-Comparing with reference hashes...
-✓ large: Perfect match!
-
-=== Test Summary ===
-Total test files: 3
-Perfect matches: 3
-Success rate: 100.0%
-```
-
 ## Troubleshooting
 
 ### Binary Not Found
@@ -401,7 +371,7 @@ Through extensive testing, we discovered that Granado Espada's IPF system suffer
 
 1. Add IPF file to `testing/test_files/` directory
 2. Update `TEST_FILES` configuration in `testing/src/config.js`
-3. Generate reference hashes: `npm run generateOriginal`
+3. Generate reference hashes: `npm run generate`
 4. Validate: `npm run test`
 
 ### Adding New Tool Validators

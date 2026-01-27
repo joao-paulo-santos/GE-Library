@@ -18,11 +18,11 @@ module.exports = {
     PLATFORM_TARGET: 'linux-amd64',  // Set explicitly by developer (no auto-detection)
     get EXTRACTOR_PATH() {
         const ext = this.PLATFORM_TARGET.startsWith('windows') ? '.exe' : '';
-        return path.join(PROJECT_ROOT, `releases/ge-library/${this.PLATFORM_TARGET}/ipf-extractor${ext}`);
+        return path.join(PROJECT_ROOT, `releases/ge-library/${this.PLATFORM_TARGET}/tools/ipf-extractor${ext}`);
     },
     get OPTIMIZER_PATH() {
         const ext = this.PLATFORM_TARGET.startsWith('windows') ? '.exe' : '';
-        return path.join(PROJECT_ROOT, `releases/ge-library/${this.PLATFORM_TARGET}/ipf-optimizer${ext}`);
+        return path.join(PROJECT_ROOT, `releases/ge-library/${this.PLATFORM_TARGET}/tools/ipf-optimizer${ext}`);
     },
     ORIGINAL_TOOLS_DIR: path.join(PROJECT_ROOT, 'releases/original/bin'),
     
@@ -71,6 +71,7 @@ module.exports = {
         ui_optimized: {
             name: 'ui_optimized.ipf',
             source: path.join(PROJECT_ROOT, 'testing/test_files/ui_optimized.ipf'),
+            output: path.join(PROJECT_ROOT, 'testing/reference_our/ui_optimized'),
             type: 'optimization',
             original_source: path.join(PROJECT_ROOT, 'testing/test_files/ui.ipf')
         }

@@ -12,13 +12,6 @@ import (
 	"github.com/joao-paulo-santos/GE-Library/pkg/zipcipher"
 )
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 func OptimizeIPF(filePath string, createBackup bool) error {
 	fmt.Printf("Optimizing: %s\n", filePath)
 

@@ -13,7 +13,7 @@ This project creates open-source alternatives to the closed-source Windows tools
 
 #### IPF Archive Extractor (v1.0)
 - **Replicates**: `iz.exe` + `ez.exe` functionality for IPF archive extraction
-- **Performance**: 10-15x faster than original tools under wine (windows benchmarks coming soon)
+- **Performance**: Faster than original tools (10-15x when tested under Wine, Windows benchmarks pending)
 - **Compatibility**: Byte-for-byte identical output when compared to original tools
 - **Implementations**: Python (reference/development) + Go (production)
 

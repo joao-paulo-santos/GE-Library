@@ -58,7 +58,7 @@ build:
 
 # Build for all platforms
 .PHONY: build-all
-build-all: clean deps build-linux build-windows build-darwin
+build-all: clean deps build-linux build-linux-arm64 build-windows build-windows-arm64 build-darwin build-darwin-arm64
 
 # Build for Linux (amd64)
 .PHONY: build-linux

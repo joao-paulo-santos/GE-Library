@@ -4,13 +4,11 @@
   "description": "Modular JavaScript validation framework for Granado Espada IPF tools",
   "main": "cli.js",
   "scripts": {
-    "validate": "node cli.js validate",
-    "validate:verbose": "node cli.js validate --verbose",
-    "compare": "node cli.js compare",
-    "extract": "node cli.js extract",
     "generate": "node cli.js generate",
     "test": "node cli.js test",
     "test:keep": "node cli.js test --keep",
+    "test:extraction": "node cli.js test-extraction",
+    "test:optimization": "node cli.js test-optimization",
     "help": "node cli.js --help"
   },
   "keywords": [

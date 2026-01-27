@@ -13,7 +13,7 @@ used for Granado Espada development and modding. Our tools provide:
 
   • Cross-platform support: Linux, Windows, macOS
   • Modern hardware optimization for multi-core systems
-  • 10-15x faster performance than original tools (Under Wine)
+  • Faster than original tools (10-15x when tested under Wine)
   • 100% compatibility with original file formats
   • Open development with community contributions
 

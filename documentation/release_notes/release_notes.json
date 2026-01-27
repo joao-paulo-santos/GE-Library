@@ -13,7 +13,7 @@
         "Command-line interface for automation",
         "Progress tracking and detailed logging"
       ],
-      "performance": "10-15x faster than original tools",
+      "performance": "Faster than original tools (10-15x when tested under Wine)",
       "known_issues": [
         "UI/launcher not yet included (command-line only)",
         "Automatic updater not yet implemented"

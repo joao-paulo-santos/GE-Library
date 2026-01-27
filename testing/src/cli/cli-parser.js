@@ -56,7 +56,7 @@ class CliParser {
     validateOptions(command, options) {
         const errors = [];
 
-        const validCommands = ['validate', 'compare', 'generate', 'test', 'extract'];
+        const validCommands = ['generate', 'test', 'test-extraction', 'test-optimization'];
         if (command && !validCommands.includes(command)) {
             errors.push(`Invalid command: ${command}`);
         }
@@ -66,31 +66,6 @@ class CliParser {
 
     getCommandHelp(command) {
         const helpText = {
-            validate: {
-                name: 'validate',
-                description: 'Validate IPF extraction output',
-                usage: 'node validate.js [options]',
-                options: [
-                    '  --verbose, -v       Enable detailed output',
-                    '  --quiet, -q         Suppress console output',
-                    '  --help, -h          Show this help message'
-                ]
-            },
-            compare: {
-                name: 'compare',
-                description: 'Compare pre-existing outputs with reference hashes',
-                usage: 'node compare.js [options]',
-                options: [
-                    '  --output, -o <path>         Path to output directory or file',
-                    '  --test-key, -k <key>           Test file key (e.g., small, medium, large)',
-                    '  --output-map, -m <json>      JSON mapping of test keys to outputs',
-                    '  --reference, -r <path>         Path to reference hashes file',
-                    '  --report-json <path>          Save report to JSON file',
-                    '  --quiet, -q                  Suppress console output',
-                    '  --verbose, -v               Enable detailed output',
-                    '  --help, -h                  Show this help message'
-                ]
-            },
             generate: {
                 name: 'generate',
                 description: 'Generate reference hash databases (requires iz.exe + ez.exe)',
@@ -102,23 +77,33 @@ class CliParser {
                     '  --help, -h                  Show this help message'
                 ]
             },
-            extract: {
-                name: 'extract',
-                description: 'Run IPF extractor on a file',
-                usage: 'node extract.js <ipf_file> <output_dir>',
-                options: [
-                    '  <ipf_file>                     Path to IPF file',
-                    '  <output_dir>                  Output directory',
-                    '  --help, -h                      Show this help message'
-                ]
-            },
             test: {
                 name: 'test',
-                description: 'Run complete extraction and validation test',
+                description: 'Run all tests (extraction + optimization)',
                 usage: 'node cli.js test [options]',
                 options: [
                     '  --verbose, -v      Enable detailed output',
+                    '  --keep              Keep extracted/optimized files for debugging (otherwise cleaned up)',
+                    '  --help, -h         Show this help message'
+                ]
+            },
+            'test-extraction': {
+                name: 'test-extraction',
+                description: 'Run extraction validation test',
+                usage: 'node cli.js test-extraction [options]',
+                options: [
+                    '  --verbose, -v      Enable detailed output',
                     '  --keep              Keep extracted files for debugging (otherwise cleaned up)',
+                    '  --help, -h         Show this help message'
+                ]
+            },
+            'test-optimization': {
+                name: 'test-optimization',
+                description: 'Run optimization validation test',
+                usage: 'node cli.js test-optimization [options]',
+                options: [
+                    '  --verbose, -v      Enable detailed output',
+                    '  --quiet, -q        Suppress console output',
                     '  --help, -h         Show this help message'
                 ]
             },
@@ -152,18 +137,16 @@ class CliParser {
  Granado Espada IPF Tools - Validation Framework
 
  Commands:
-    validate         Validate IPF extraction output
-    compare          Compare pre-existing outputs with reference hashes
-    generate         Generate reference hash databases
-    test             Run complete extraction and validation test
-    extract          Run IPF extractor
+    generate             Generate reference hash databases
+    test                 Run all tests (extraction + optimization)
+    test-extraction       Run extraction validation test
+    test-optimization    Run optimization validation test
 
   Global options:
     --help, -h     Show this help message
 
   For command-specific help, run: <command> --help
 
-  For command-specific help, run: <command> --help
  `;
     }
 }
