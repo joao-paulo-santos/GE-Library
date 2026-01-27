@@ -81,7 +81,7 @@ We use a comprehensive testing framework to validate our tools against original 
 - **Cross-platform validation**: Verify consistent behavior across platforms
 
 ### Phase 1: Foundation (Complete)
-- Reverse engineer `iz.exe` and `ez.exe` functionality
+- Reverse engineer `iz.exe`, `ez.exe`, and `oz.exe` functionality
 - Create Python reference implementation
 - Develop Go production implementation
 - Establish testing framework
