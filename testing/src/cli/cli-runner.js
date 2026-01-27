@@ -12,11 +12,9 @@ const logger = new Logger(config.LOG_LEVEL, config.LOG_SINK, config.LOG_FILE);
 class CliRunner {
     constructor() {
         this.commands = {
-            validate: require('./commands/validate.js'),
-            compare: require('./commands/compare.js'),
             generate: require('./commands/generate.js'),
             test: require('./commands/test.js'),
-            extract: require('./commands/extract.js'),
+            'test-extraction': require('./commands/test-extraction.js'),
             'test-optimization': require('./commands/test-optimization.js')
         };
     }

@@ -38,6 +38,102 @@ This project provides two complementary implementations:
 - **Advantages**: Multi-threaded, memory-efficient, cross-platform binaries
 - **Use Case**: Large-scale extractions, automation, and production workflows
 
+### Build System
+
+#### Build Locations
+All binaries are built to `releases/ge-library/` with platform-specific subdirectories:
+
+```
+releases/ge-library/
+ ├── linux-amd64/tools/     # Linux 64-bit
+ ├── linux-arm64/tools/     # Linux ARM64
+ ├── windows-amd64/tools/   # Windows 64-bit
+ ├── windows-arm64/tools/   # Windows ARM64
+ ├── darwin-amd64/tools/    # macOS 64-bit
+ └── darwin-arm64/tools/    # macOS ARM64
+```
+
+#### Quick Build (Current Platform)
+
+**Using Makefile**
+```bash
+cd src/golang
+
+# Auto-build for current platform
+make build
+
+# Build all platforms
+make build-all
+
+# Build complete release (all platforms + packages)
+make release
+```
+
+#### Platform Configuration
+
+Testing framework uses explicit platform configuration in `testing/src/config.js`:
+
+```javascript
+// Linux AMD64 developer
+module.exports = {
+    PLATFORM_TARGET: 'linux-amd64',
+    get EXTRACTOR_PATH() {
+        return path.join(PROJECT_ROOT, 'releases/ge-library/linux-amd64/tools/ipf-extractor');
+    }
+};
+
+// Windows AMD64 developer
+module.exports = {
+    PLATFORM_TARGET: 'windows-amd64',
+    get EXTRACTOR_PATH() {
+        return path.join(PROJECT_ROOT, 'releases/ge-library/windows-amd64/tools/ipf-extractor.exe');
+    }
+};
+```
+
+#### Release Archives
+
+Builds create ready-to-distribute archives:
+
+- **All platforms**: `ge-library-{platform}.zip`
+
+Extracted folders contain:
+```
+ge-library/
+├── tools/              # Binary executables
+│   ├── ipf-extractor (or .exe)
+│   └── ipf-optimizer (or .exe)
+├── README.txt          # User documentation
+└── PATCHNOTES.txt     # Release notes (last 5 releases)
+```
+
+#### Build Options
+
+```bash
+# Clean old builds
+make clean
+
+# Verbose build (not needed, make shows progress)
+make build
+
+# Generate release files
+make generate-release-files
+
+# Build complete release
+make release
+```
+
+#### Testing Framework
+
+Build latest tools before running tests:
+
+```bash
+cd src/golang
+make build
+```
+
+This builds to `releases/ge-library/{platform}/tools/` for the current platform.
+
 ## Performance Architecture
 
 ### Single-Pass Optimization

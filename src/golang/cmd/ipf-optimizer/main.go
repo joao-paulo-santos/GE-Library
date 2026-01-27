@@ -24,8 +24,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Optimizing: %s\n", inputFile)
-
 	if err := optimize.OptimizeIPF(inputFile, *createBackup); err != nil {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)

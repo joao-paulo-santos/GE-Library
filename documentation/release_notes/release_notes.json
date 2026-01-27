@@ -1,0 +1,24 @@
+{
+  "releases": [
+    {
+      "version": "0.1",
+      "date": "2026-01-26",
+      "type": "Initial Release",
+      "changes": [
+        "IPF Extractor: Extract IPF archives with proper filename decryption",
+        "IPF Optimizer: Optimize IPF archives by removing duplicate files",
+        "Cross-platform support (Linux, Windows, macOS)",
+        "Multi-threaded extraction for better performance",
+        "100% compatibility with original GE tools",
+        "Command-line interface for automation",
+        "Progress tracking and detailed logging"
+      ],
+      "performance": "Faster than original tools (10-15x when tested under Wine)",
+      "known_issues": [
+        "UI/launcher not yet included (command-line only)",
+        "Automatic updater not yet implemented"
+      ]
+    }
+  ],
+  "github_url": "https://github.com/joao-paulo-santos/GE-Library"
+}

@@ -12,13 +12,6 @@ import (
 	"github.com/joao-paulo-santos/GE-Library/pkg/zipcipher"
 )
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 func OptimizeIPF(filePath string, createBackup bool) error {
 	fmt.Printf("Optimizing: %s\n", filePath)
 
@@ -220,7 +213,7 @@ func writeCentralDirectoryEntry(w io.Writer, file *ipf.FileInfo, localHeaderOffs
 	binary.LittleEndian.PutUint16(header[4:6], 0x0014) // ZIP 2.0 (original IPFs usually have 0x0000)
 
 	binary.LittleEndian.PutUint16(header[6:8], file.VersionNeeded)
-	binary.LittleEndian.PutUint16(header[8:10], 0x0001)
+	binary.LittleEndian.PutUint16(header[8:10], 0x0009)
 	binary.LittleEndian.PutUint16(header[10:12], file.ZipInfo.Method)
 	binary.LittleEndian.PutUint16(header[12:14], file.ZipInfo.ModifiedTime)
 	binary.LittleEndian.PutUint16(header[14:16], file.ZipInfo.ModifiedDate)
@@ -231,8 +224,8 @@ func writeCentralDirectoryEntry(w io.Writer, file *ipf.FileInfo, localHeaderOffs
 	binary.LittleEndian.PutUint16(header[30:32], file.ExtraLen)
 	binary.LittleEndian.PutUint16(header[32:34], 0)
 	binary.LittleEndian.PutUint16(header[34:36], 0)
-	binary.LittleEndian.PutUint32(header[36:40], 0)
-	binary.LittleEndian.PutUint32(header[40:44], 0)
+	binary.LittleEndian.PutUint16(header[36:38], 0)
+	binary.LittleEndian.PutUint32(header[38:42], 0)
 	binary.LittleEndian.PutUint32(header[42:46], uint32(localHeaderOffset))
 
 	if _, err := w.Write(header); err != nil {

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const { executeCommand } = require('../../executor');
-const { ensureDir, removeDir, fileExists, getFileInfo, copyFile } = require('../../filesystem');
+const { ensureDir, removeDir, fileExists, getFileInfo, copyFile, writeJson } = require('../../filesystem');
 const { calculateFileHash } = require('../../hash');
 const { readJson } = require('../../filesystem');
 const path = require('path');
@@ -13,6 +13,7 @@ const logger = new Logger(config.LOG_LEVEL, config.LOG_SINK, config.LOG_FILE);
 
 const OPTIMIZER_BIN = config.OPTIMIZER_PATH;
 const OPTIMIZATION_ORIGINAL_HASHES = config.OPTIMIZATION_ORIGINAL_HASHES_PATH;
+const OPTIMIZATION_OUR_HASHES = config.OPTIMIZATION_OUR_HASHES_PATH;
 
 const testFiles = {
     ui_optimized: {
@@ -86,7 +87,34 @@ async function runOptimizationTest(testKey, options) {
         logger.info(`  File count match: ${countMatch ? '✓' : '✗'}`);
 
         const perfectMatch = hashMatch && sizeMatch && countMatch;
-
+        
+        // Save our optimizer's output hash for historical tracking
+        const ourHashResult = {
+            generated_at: new Date().toISOString(),
+            purpose: 'Hashes from our ipf-optimizer tool',
+            tool: 'ipf-optimizer (Go implementation)',
+            test_files: {}
+        };
+        
+        ourHashResult.test_files[testKey] = {
+            optimized: {
+                test_file: testConfig.name,
+                size_bytes: optimizedStats.size,
+                file_count: optimizedFileCount,
+                sha256: optimizedHash
+            },
+            validation: {
+                hash_match: hashMatch,
+                size_match: sizeMatch,
+                count_match: countMatch,
+                perfect_match: perfectMatch
+            },
+            timestamp: new Date().toISOString()
+        };
+        
+        await writeJson(OPTIMIZATION_OUR_HASHES, ourHashResult, 2);
+        logger.debug(`Our hash saved to: ${OPTIMIZATION_OUR_HASHES}`);
+        
         if (perfectMatch) {
             logger.success(`✓ ${testKey}: Perfect match!`);
         } else {

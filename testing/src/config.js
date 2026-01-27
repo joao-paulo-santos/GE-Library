@@ -15,14 +15,22 @@ module.exports = {
     PROJECT_ROOT,
     TEST_FILES_DIR: path.join(PROJECT_ROOT, 'testing/test_files'),
     TEST_HASHES_DIR: path.join(PROJECT_ROOT, 'testing/test_hashes'),
-    EXTRACTOR_PATH: path.join(PROJECT_ROOT, 'bin/ipf-extractor'),
-    OPTIMIZER_PATH: path.join(PROJECT_ROOT, 'bin/ipf-optimizer'),
+    PLATFORM_TARGET: 'linux-amd64',  // Set explicitly by developer (no auto-detection)
+    get EXTRACTOR_PATH() {
+        const ext = this.PLATFORM_TARGET.startsWith('windows') ? '.exe' : '';
+        return path.join(PROJECT_ROOT, `releases/ge-library/${this.PLATFORM_TARGET}/tools/ipf-extractor${ext}`);
+    },
+    get OPTIMIZER_PATH() {
+        const ext = this.PLATFORM_TARGET.startsWith('windows') ? '.exe' : '';
+        return path.join(PROJECT_ROOT, `releases/ge-library/${this.PLATFORM_TARGET}/tools/ipf-optimizer${ext}`);
+    },
     ORIGINAL_TOOLS_DIR: path.join(PROJECT_ROOT, 'releases/original/bin'),
     
     // Hash databases (organized by tool type)
     EXTRACTION_ORIGINAL_HASHES_PATH: path.join(PROJECT_ROOT, 'testing/test_hashes/tools/extraction/original_hashes.json'),
     EXTRACTION_OUR_HASHES_PATH: path.join(PROJECT_ROOT, 'testing/test_hashes/tools/extraction/our_hashes.json'),
     OPTIMIZATION_ORIGINAL_HASHES_PATH: path.join(PROJECT_ROOT, 'testing/test_hashes/tools/optimization/original_hashes.json'),
+    OPTIMIZATION_OUR_HASHES_PATH: path.join(PROJECT_ROOT, 'testing/test_hashes/tools/optimization/our_hashes.json'),
 
     // Hashing strategies
     HASH_STRATEGY_THRESHOLD: 100,  // <=100 files = full, >100 = sampling
@@ -63,6 +71,7 @@ module.exports = {
         ui_optimized: {
             name: 'ui_optimized.ipf',
             source: path.join(PROJECT_ROOT, 'testing/test_files/ui_optimized.ipf'),
+            output: path.join(PROJECT_ROOT, 'testing/reference_our/ui_optimized'),
             type: 'optimization',
             original_source: path.join(PROJECT_ROOT, 'testing/test_files/ui.ipf')
         }

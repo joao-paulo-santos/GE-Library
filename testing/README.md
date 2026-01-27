@@ -2,6 +2,11 @@
 
 Modular JavaScript validation framework for Granado Espada IPF tool implementations.
 
+## Related Documentation
+
+- [Project Testing Strategy](../documentation/TESTING.md) - Testing philosophy, types, and coverage
+- [Testing Framework Architecture](./architecture.md) - Technical architecture and implementation
+
 ## Overview
 
 This testing framework validates our open-source IPF tools against the original Windows tools (iz.exe, ez.exe, etc.) using hash-based comparison. The framework ensures 100% compatibility without distributing proprietary IPF files.
@@ -23,61 +28,28 @@ npm test
 
 This will:
 1. Extract all test IPF files (ai.ipf, item_texture.ipf, ui.ipf)
-2. Generate hashes from our extraction output
-3. Compare with reference hashes from original tools
-4. Report validation results
+2. Optimize ui.ipf and compare with reference
+3. Generate hashes from our output
+4. Compare with reference hashes from original tools
+5. Report validation results
 
 ### Run Individual Commands
 
 ```bash
-# Validate extraction output
-npm run validate
+# Run extraction tests only
+npm run test:extraction
 
-# Validate with verbose output
-npm run validate:verbose
+# Run optimization tests only
+npm run test:optimization
 
-# Compare pre-existing outputs
-npm run compare
-
-# Run extractor only
-npm run extract -- test_files/ai.ipf output_dir
+# Run all tests (extraction + optimization)
+npm test
 
 # Generate reference hashes (requires original Windows tools)
 npm run generate
 
 # Generate reference hashes from original tool extractions
 # Note: This saves hashes to test_hashes/tools/extraction/original_hashes.json
-```
-
-## Architecture
-
-The testing framework uses a modular architecture with clear separation of concerns:
-
-```
-testing/
-├── src/
-│   ├── infrastructure/          # Core utilities
-│   │   ├── hash.js            # Hash calculation
-│   │   ├── filesystem.js      # File operations
-│   │   ├── executor.js        # Command execution
-│   │   ├── logger.js          # Logging
-│   │   └── config.js          # Configuration
-│   ├── business/              # Business logic
-│   │   ├── analysis/          # Directory analysis
-│   │   ├── hashing/           # Hash strategies
-│   │   ├── comparison/        # Hash comparison
-│   │   └── validation/        # Tool validators
-│   ├── generation/            # Reference generation
-│   │   ├── hash-database.js   # Hash database CRUD
-│   │   └── reference-generator.js  # Generate reference hashes
-│   ├── presentation/          # User interface
-│   │   ├── reporting/         # Output formatting
-│   │   └── cli/              # Command-line interface
-│   └── cli.js               # Main entry point
-├── test_files/               # IPF test files
-├── test_hashes/              # Reference hash databases
-├── package.json              # npm configuration
-└── README.md                # This file
 ```
 
 ## Directory Structure
@@ -140,44 +112,9 @@ The framework validates against three test files:
 | item_texture.ipf | 191MB | 3,063 | Sampling |
 | ui.ipf    | 877MB  | 11,567 | Sampling |
 
-### Hash Strategy Selection
-
-The framework automatically selects the appropriate hash strategy:
-
-- **≤100 files**: Full file-by-file hashing
-- **>100 files**: Representative sampling (15 beginning + 15 middle + 15 end)
+For detailed hash strategy explanation, see [Project Testing Strategy](../documentation/TESTING.md#hash-validation-features).
 
 ## Commands
-
-### validate
-
-Validate IPF extraction output against reference hashes.
-
-```bash
-npm run validate [options]
-
-Options:
-  --verbose, -v      Enable detailed output
-  --quiet, -q        Suppress console output
-  --help, -h         Show help
-```
-
-### compare
-
-Compare pre-existing outputs with reference hashes.
-
-```bash
-npm run compare [options]
-
-Options:
-  --output, -o <path>         Path to output directory or file
-  --test-key, -k <key>       Test file key (small, medium, large)
-  --output-map, -m <json>    JSON mapping of test keys to outputs
-  --reference, -r <path>     Path to reference hashes file
-  --report-json <path>        Save report to JSON file
-  --verbose, -v               Enable detailed output
-  --help, -h                  Show help
-```
 
 ### generate
 
@@ -193,25 +130,9 @@ Options:
   --help, -h                 Show help
 ```
 
-### extract
-
-Run IPF extractor on a file.
-
-```bash
-npm run extract <ipf_file> <output_dir> [options]
-
-Arguments:
-  <ipf_file>         Path to IPF file to extract
-  <output_dir>       Output directory for extracted files
-
-Options:
-  --verbose, -v      Enable detailed output
-  --help, -h         Show help
-```
-
 ### test
 
-Run complete extraction and validation test.
+Run all tests (extraction + optimization).
 
 ```bash
 npm test
@@ -220,15 +141,42 @@ npm run test
 
 Options:
   --verbose, -v      Enable detailed output
-  --keep              Keep extracted files for debugging (otherwise cleaned up)
+  --keep              Keep extracted/optimized files for debugging (otherwise cleaned up)
   --help, -h         Show help message
 ```
 
 **Process:**
 1. Extract all test IPF files using our Go tool
-2. Save hashes to `test_hashes/tools/extraction/our_hashes.json`
-3. Compare against reference hashes from original tools
-4. Clean up extracted files from `reference_our/` (unless `--keep` flag used)
+2. Optimize ui.ipf and compare with reference
+3. Save hashes to `test_hashes/tools/extraction/our_hashes.json` and `test_hashes/tools/optimization/our_hashes.json`
+4. Compare against reference hashes from original tools
+5. Clean up extracted files from `reference_our/` (unless `--keep` flag used)
+
+### test-extraction
+
+Run extraction validation test only.
+
+```bash
+npm run test:extraction [options]
+
+Options:
+  --verbose, -v      Enable detailed output
+  --keep              Keep extracted files for debugging (otherwise cleaned up)
+  --help, -h         Show help message
+```
+
+### test-optimization
+
+Run optimization validation test only.
+
+```bash
+npm run test:optimization [options]
+
+Options:
+  --verbose, -v      Enable detailed output
+  --quiet, -q        Suppress console output
+  --help, -h         Show help message
+```
 
 ## Configuration
 
@@ -255,48 +203,19 @@ Configuration is in `src/config.js`:
 }
 ```
 
-## Output
-
-### Success Output
-
-```
-✓ Validation complete: 3/3 tests passed
-
-=== Test Summary ===
-Total test files: 3
-Perfect matches: 3
-Success rate: 100.0%
-```
-
-### Failure Output
-
-```
-✗ Validation failed: 1/3 tests failed
-
-=== Test Summary ===
-Total test files: 3
-Perfect matches: 2
-Mismatches: 1
-Success rate: 66.7%
-
-Differences:
-  - ui.ipf: 3 files mismatched
-```
-
 ## CI/CD Integration
 
 The framework is designed for CI/CD integration:
 
 ```bash
-# Silent mode for automated pipelines
-npm run validate --quiet
+# Run all tests (non-zero exit code on failure)
+npm test
 
-# Generate JSON report for automated testing
-npm run compare --report-json validation_report.json --quiet
+# Run extraction tests only
+npm run test:extraction
 
-# Non-zero exit code on any failure
-# Exit 0: All tests passed
-# Exit 1: Any test failed
+# Run optimization tests only
+npm run test:optimization
 ```
 
 ## For Maintainers
@@ -305,24 +224,24 @@ npm run compare --report-json validation_report.json --quiet
 
 To regenerate reference hashes:
 
-1. Ensure original Windows tools are available (iz.exe, ez.exe)
+1. Ensure original Windows tools are available (iz.exe, ez.exe, oz.exe)
 2. Run the generate command:
 
 ```bash
-npm run generateOriginal --verbose
+npm run generate --verbose
 ```
 
 This will:
 - Run original tools on all test files
 - Generate reference hash databases
-- Save to `test_hashes/tools/extraction_hashes.json`
+- Save to `test_hashes/tools/extraction/original_hashes.json` and `test_hashes/tools/optimization/original_hashes.json`
 
 ### Adding New Test Files
 
 1. Add IPF file to `test_files/` directory
 2. Update `TEST_FILES` configuration in `src/config.js`
-3. Generate reference hashes: `npm run generateOriginal`
-4. Validate: `npm run test`
+3. Generate reference hashes: `npm run generate`
+4. Validate: `npm test`
 
 ## Troubleshooting
 
@@ -362,6 +281,17 @@ Error: Command timed out
 ```javascript
 EXECUTION_TIMEOUT: 1200000,  // 20 minutes
 ```
+
+### Hash Mismatches
+
+```
+✗ large: Hash mismatch
+```
+
+**Solution**: Verify:
+1. Go binary is latest version
+2. Reference hashes are up to date
+3. No file corruption in test files
 
 ## License
 

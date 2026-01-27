@@ -67,7 +67,7 @@ Total local file header size: `30 + N + M` bytes
 | 0 | 4 | Signature | `0x02014b50` |
 | 4 | 2 | Version Made By | **CRITICAL**: oz.exe writes `0x0014` (ZIP 2.0) even when original has `0x0000` |
 | 6 | 2 | Version Needed | Version needed to extract |
-| 8 | 2 | General Purpose Flags | Usually `0x0001` |
+ | 8 | 2 | General Purpose Flags | **CRITICAL**: oz.exe writes `0x0009` (must match local headers) |
 | 10 | 2 | Compression Method | Compression method |
 | 12 | 2 | Modified Time | MS-DOS time |
 | 14 | 2 | Modified Date | MS-DOS date |

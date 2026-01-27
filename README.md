@@ -1,96 +1,94 @@
 # Granado Espada Tool Library
 
-An open-source library providing modern alternatives to the tools used in Granado Espada development and modding. This project replicates and enhances the functionality of original tools while optimizing for modern hardware and providing true cross-platform compatibility.
+An open-source library providing modern alternatives to tools used in Granado Espada development and modding. This project replicates and enhances the functionality of original tools while optimizing for modern hardware and providing true cross-platform compatibility.
 
 ## Project Mission
 
-This project creates open-source alternatives to the closed-source Windows tools used for Granado Espada development. Our tools provide:
+This project creates open-source alternatives to the closed-source Windows tools used in Granado Espada development. Our tools provide:
 
-- **Cross-platform performance** on Linux, Windows, and macOS
+- **Cross-platform support** on Linux, Windows, and macOS
 - **Modern hardware optimization** for multi-core systems
 - **Open development** with community contributions
-### Currently Completed Tools
+- **100% compatibility** with original file formats
 
-#### IPF Archive Extractor (v1.0)
+## Currently Completed Tools
+
+### IPF Archive Extractor (v0.1)
 - **Replicates**: `iz.exe` + `ez.exe` functionality for IPF archive extraction
-- **Performance**: 10-15x faster than original tools under wine (windows benchmarks coming soon)
+- **Performance**: Faster than original tools (10-15x when tested under Wine, Windows benchmarks pending)
 - **Compatibility**: Byte-for-byte identical output when compared to original tools
 - **Implementations**: Python (reference/development) + Go (production)
 
-### Planned Future Tools
+### IPF Archive Optimizer (v0.1)
+- **Replicates**: `oz.exe` functionality for IPF optimization
+- **Features**: Removes duplicate files from IPF archives to reduce size
+- **Performance**: Significantly reduces file count and archive size
+- **Compatibility**: Byte-for-byte identical output when compared to original tools
+- **Implementation**: Go (production)
 
-This is just the beginning. We plan to recreate the entire suite of Granado Espada development tools:
+## Planned Future Tools
 
-#### IPF Management Tools
+### IPF Management Tools
 - **Create IPF from Folder**: Replicate `cz.exe` + `zi.exe` functionality for creating IPF archives from folders
 - **Add Folder to IPF**: Replicate `af.exe` functionality for adding content to existing IPF files
-- **Optimize IPF**: Replicate `oz.exe` functionality for IPF compression and optimization
 
-#### Data Conversion Tools
+### Data Conversion Tools
 - **IES to XML/PRN Converter**: Replicate `ix3.exe` functionality for converting IES files to Excel-compatible formats
 
 Each tool will maintain compatibility with original file formats while providing modern performance optimizations and cross-platform support.
 
-### Beyond the Original Suite
-
-After completing the full getools.bat tool suite, we may consider developing new tools based on community needs and technical feasibility. However, our primary focus remains on faithfully recreating and modernizing the original tooling that Granado Espada developers and modders have relied on for years.
-
-
-For detailed benchmarks and technical information, see [documentation/DEVELOPMENT.md](documentation/DEVELOPMENT.md).
-For testing and validation procedures, see [documentation/TESTING.md](documentation/TESTING.md).
-
 ## Quick Start
 
 ### For Users (Recommended)
-Download the pre-compiled binary for your system from the `releases/` directory:
+
+Download pre-compiled binary for your system from the `releases/` directory:
 
 ```bash
-# Extract IPF file
+# Extract an IPF archive
 ./ipf-extractor -input archive.ipf -output extracted_files
 
 # Use all CPU cores for maximum performance
 ./ipf-extractor -input archive.ipf -workers 0 -verbose
+
+# Optimize an IPF archive (removes duplicate files)
+./ipf-optimizer -input archive.ipf -backup
 ```
 
 ### For Developers
+
 If you want to compile from source:
 
 **Go Implementation:**
 ```bash
 cd src/golang
-go build -o ipf-extractor ./cmd/ipf-extractor
-./ipf-extractor -input archive.ipf -output extracted_files
+make build
+# Binaries built to: releases/ge-library/{platform}/tools/
 ```
 
-**Python Implementation:**
+**Testing:**
 ```bash
-cd src/python
-python ipf_extractor.py archive.ipf extracted_files
+cd testing
+npm install
+npm test
 ```
 
-## Future Roadmap
+## Testing
 
-### Phase 1: Foundation (Complete)
-- Reverse engineer `iz.exe` and `ez.exe` functionality
-- Create Python reference implementation
-- Develop Go production implementation
-- Establish testing framework
-- Cross-platform compatibility
+We use a comprehensive testing framework to validate our tools against original Windows tools using hash-based comparison for byte-for-byte compatibility.
 
-### Phase 2: Complete Original Tool Suite (In Progress)
-- IPF Creation from Folder (`cz.exe` + `zi.exe` replication)
-- Add Folder to IPF (`af.exe` replication)
-- IES to XML/PRN Converter (`ix3.exe` replication)
-- IPF Optimization (`oz.exe` replication)
-- GUI interface for tool selection and batch operations
-
-### Phase 3: Platform Enhancement (Planned)
-- Cross-platform GUI application
-- Comprehensive documentation and tutorials
+For testing framework usage and commands, see [Testing Framework](testing/README.md).
+For testing strategy and coverage, see [Testing Documentation](documentation/TESTING.md).
 
 ## Contributing
 
 We welcome contributions from the community!
+
+
+## Documentation
+
+- **[DEVELOPMENT.md](documentation/DEVELOPMENT.md)** - Technical development guide and architecture
+- **[TESTING.md](documentation/TESTING.md)** - Testing procedures and validation
+- **[testing/README.md](testing/README.md)** - Testing framework documentation
 
 ## License
 
