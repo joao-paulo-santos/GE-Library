@@ -54,8 +54,8 @@ Options:
 - Must be on main branch
 - No uncommitted changes
 - GitHub CLI (`gh`) installed and authenticated
-- `jq` installed (for JSON parsing)
-- Go, Node.js, and Make installed (for building)
+- Node.js (for release notes generation and testing)
+- Go, and Make installed (for building)
 
 ### build.sh
 
