@@ -2,6 +2,11 @@
 
 This document covers testing procedures to validate our Granado Espada Tool Library implementations against original tools.
 
+## Documentation Links
+
+- [Testing Framework Usage](../testing/README.md) - Commands, configuration, troubleshooting, CI/CD
+- [Testing Framework Architecture](../testing/architecture.md) - Technical architecture and implementation
+
 ## Current Project Status
 
 Our project aims to recreate the complete getools.bat tool suite. Currently, we've completed IPF extraction and IPF optimization, and are working on the remaining tools: IPF creation, IES conversion, and folder management.
@@ -10,39 +15,7 @@ Our project aims to recreate the complete getools.bat tool suite. Currently, we'
 
 We use a modular JavaScript-based testing framework to validate our implementations against original tools. The framework is located in `testing/` directory and uses hash-based comparison to ensure 100% compatibility.
 
-### Framework Architecture
-
-The testing framework follows a modular architecture with clear separation of concerns:
-
-```
-testing/
-├── src/
-│   ├── infrastructure/           # Core utilities (no business logic)
-│   │   ├── hash.js            # Pure hash functions
-│   │   ├── filesystem.js      # File operations
-│   │   ├── executor.js        # Command execution
-│   │   ├── logger.js          # Configurable logging
-│   │   └── config.js          # Configuration
-│   ├── business/              # Business logic
-│   │   ├── analysis/          # Directory analysis
-│   │   ├── hashing/           # Hash strategies
-│   │   ├── comparison/        # Hash comparison
-│   │   └── validation/        # Tool validators
-│   ├── generation/            # Reference generation
-│   │   ├── hash-database.js   # Hash database CRUD
-│   │   └── reference-generator.js  # Generate reference hashes
-│   └── presentation/          # User interface
-│       ├── reporting/         # Output formatting
-│       └── cli/              # Command-line interface
-├── test_files/               # IPF test files
-├── test_hashes/              # Reference hash databases
-├── package.json              # npm configuration
-├── cli.js                   # Main entry point
-├── README.md                # Testing framework documentation
-└── architecture.md          # Technical architecture
-```
-
-For detailed technical documentation, see [testing/README.md](../testing/README.md) and [testing/architecture.md](../testing/architecture.md).
+For framework usage and commands, see [Testing Framework Usage](../testing/README.md).
 
 ## IPF Extraction Testing (Completed)
 
@@ -62,35 +35,7 @@ We validate against three test files from Granado Espada Classique:
 
 ### For Users - Validate Compiled Builds
 
-The testing framework provides npm scripts for easy validation:
-
-```bash
-cd testing
-
-# Run all tests (extraction + optimization)
-npm test
-
-# Run extraction tests only
-npm run test:extraction
-
-# Run optimization tests only
-npm run test:optimization
-```
-
-All commands support `--help` flag for usage information.
-
-### CI/CD Integration
-
-The framework is designed for CI/CD pipelines:
-
-```bash
-# Run all tests (non-zero exit code on any failure)
-npm test
-
-# Run specific test suites
-npm run test:extraction
-npm run test:optimization
-```
+The testing framework provides npm scripts for easy validation. For detailed command reference and options, see [Testing Framework Usage](../testing/README.md).
 
 ### For Maintainers - Generate Reference Hashes
 
@@ -176,34 +121,7 @@ Verifies consistent behavior across Linux, Windows, and macOS for users who can'
 
 ### Hash-Based Testing Framework
 
-The framework stores reference hashes in `testing/test_hashes/`:
-
-- `testing/test_hashes/tools/extraction/original_hashes.json` - Reference hashes from original Windows tools
-- `testing/test_hashes/tools/extraction/our_hashes.json` - Hashes from our Go IPF extractor
-
-### Reference Extractions
-
-- `testing/reference_original/` - Extractions from original Windows tools (iz.exe + ez.exe) - Permanent storage
-- `testing/reference_our/` - Extractions from our Go tool - Temporary, cleaned up after tests unless `--keep` flag used
-
-### Hash Database Structure
-
-The hash database structure supports all implemented tools:
-```
-test_hashes/tools/
-├── extraction/
-│   ├── original_hashes.json
-│   └── our_hashes.json
-├── optimization/
-│   ├── original_hashes.json
-│   └── our_hashes.json
-├── creation/
-│   ├── original_hashes.json
-│   └── our_hashes.json
-└── conversion/
-    ├── original_hashes.json
-    └── our_hashes.json
-```
+The framework stores reference hashes in `testing/test_hashes/`. For detailed structure and organization, see [Testing Framework Usage](../testing/README.md).
 
 ## Performance Metrics
 
@@ -268,80 +186,7 @@ The framework automatically chooses optimal validation approach:
 
 This approach ensures fast validation while maintaining accuracy, keeping hash databases manageable for Git storage.
 
-## Quick Start Guide
-
-### Install Dependencies
-
-```bash
-cd testing
-npm install
-```
-
-### Build Go Binary
-
-```bash
-cd ../src/golang
-make build
-# Binary built to: releases/ge-library/{platform}/tools/ipf-extractor
-```
-
-### Run Tests
-
-```bash
-cd ../../testing
-npm test
-```
-
-## Troubleshooting
-
-### Binary Not Found
-
-```
-Error: Command failed: spawn ENOENT
-```
-
-**Solution**: Ensure Go binary is built:
-
-```bash
-cd src/golang
-make build
-```
-
-### Permission Denied
-
-```
-Error: EACCES: permission denied
-```
-
-**Solution**: Make binary executable:
-
-```bash
-chmod +x src/golang/releases/ge-library/linux-amd64/tools/ipf-extractor
-```
-
-### Timeout Errors
-
-```
-Error: Command timed out
-```
-
-**Solution**: Increase timeout in `testing/src/config.js`:
-
-```javascript
-EXECUTION_TIMEOUT: 1200000,  // 20 minutes
-EXTRACTOR_TIMEOUT: 1200000,
-```
-
-### Hash Mismatches
-
-```
-✗ large: Hash mismatch
-```
-
-**Solution**: Verify:
-1. Go binary is latest version
-2. Reference hashes are up to date
-3. No file corruption in test files
+For troubleshooting common issues, see [Testing Framework Usage - Troubleshooting](../testing/README.md#troubleshooting).
 
 ## IPF Progressive Bloat Discovery
 
@@ -374,15 +219,22 @@ Through extensive testing, we discovered that Granado Espada's IPF system suffer
 3. Generate reference hashes: `npm run generate`
 4. Validate: `npm run test`
 
-### Adding New Tool Validators
+### Adding New Test Commands
 
-1. Create new validator in `testing/src/validation/`
-2. Follow existing validator pattern (ExtractValidator as reference)
-3. Add CLI command in `testing/src/cli/commands/`
-4. Update testing documentation
+Each test command implements its own validation logic inline:
+
+1. Create new command file in `testing/src/cli/commands/` (e.g., `test-creation.js`)
+2. Import required utilities:
+   - `executeCommand` from `../../executor`
+   - `calculateFileHash` or `calculateDirectoryHash` from `../../hash`
+   - `writeJson` and other FS functions from `../../filesystem`
+   - `countIPFFiles` from `../../count-ipf-files` (for IPF operations)
+3. Implement inline comparison logic (see existing commands as examples)
+4. Register command in `testing/src/cli/cli-runner.js`
+5. Update testing documentation
 
 ## Additional Documentation
 
-- [Testing Framework README](../testing/README.md) - User-facing testing framework documentation
+- [Testing Framework Usage](../testing/README.md) - Commands, configuration, troubleshooting
 - [Testing Framework Architecture](../testing/architecture.md) - Technical architecture details
 - [GO_PERFORMANCE_ANALYSIS.md](../GO_PERFORMANCE_ANALYSIS.md) - Go implementation performance analysis

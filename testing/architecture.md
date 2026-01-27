@@ -4,7 +4,7 @@ Technical architecture documentation for Granado Espada IPF testing framework.
 
 ## Overview
 
-The testing framework is a modular JavaScript application that validates IPF tool implementations against original Windows tools using hash-based comparison. The architecture follows strict separation of concerns with clear layers: infrastructure, business logic, generation, and validation.
+The testing framework is a modular JavaScript application that validates IPF tool implementations against original Windows tools using hash-based comparison. The architecture follows strict separation of concerns with clear layers: infrastructure, business logic, and presentation.
 
 ## High-Level Architecture
 
@@ -14,28 +14,12 @@ graph TB
         CLI[CLI Entry Point]
         Parser[CLI Parser]
         Runner[CLI Runner]
-        JSONReporter[JSON Reporter]
-    end
-    
-    subgraph "Generation Layer"
-        RefGen[Reference Generator]
-        HashDB[Hash Database]
-    end
-    
-    subgraph "Validation Layer"
-        ExtractVal[Extract Validator]
-        CreateVal[Create Validator]
-        OptVal[Optimize Validator]
-        ConvVal[Convert Validator]
-        AddVal[Add Validator]
     end
     
     subgraph "Business Logic Layer"
         HashCalc[Hash Calculator]
         FullStrat[Full Strategy]
         SampleStrat[Sampling Strategy]
-        HashComp[Hash Comparator]
-        CompResult[Comparison Result]
         DirAnalyzer[Directory Analyzer]
     end
     
@@ -50,33 +34,37 @@ graph TB
     subgraph "External"
         IPF[IPF Files]
         GoBinary[Go IPF Extractor]
+        GoOptimizer[Go IPF Optimizer]
         OriginalTools[Original Tools]
     end
     
     CLI --> Parser
     Parser --> Runner
-    Runner --> ExtractVal
-    Runner --> RefGen
-    Runner --> CreateVal
-    Runner --> OptVal
-    Runner --> ConvVal
-    Runner --> AddVal
+    Runner --> GenerateCmd
+    Runner --> TestCmd
+    Runner --> TestExtractionCmd
+    Runner --> TestOptimizationCmd
     
-    ExtractVal --> HashCalc
-    ExtractVal --> HashComp
-    HashComp --> CompResult
-    HashComp --> Hash
+    TestExtractionCmd --> HashCalc
+    TestExtractionCmd --> GoBinary
     
-    RefGen --> HashCalc
-    RefGen --> Executor
-    RefGen --> OriginalTools
-    RefGen --> HashDB
+    TestOptimizationCmd --> GoOptimizer
     
-    Runner --> JSONReporter
+    GenerateCmd --> HashCalc
+    GenerateCmd --> Executor
+    GenerateCmd --> OriginalTools
+    
+    HashCalc --> FullStrat
+    HashCalc --> SampleStrat
+    HashCalc --> Hash
+    HashCalc --> DirAnalyzer
+    
+    TestExtractionCmd --> IPF
+    TestOptimizationCmd --> IPF
     
     Executor --> GoBinary
+    Executor --> GoOptimizer
     Executor --> OriginalTools
-    ExtractVal --> IPF
 ```
 
 ## Module Structure
@@ -95,31 +83,28 @@ testing/
 │   ├── business/              # Business logic
 │   │   ├── analysis/          # Directory structure analysis
 │   │   │   └── directory-analyzer.js
-│   │   ├── hashing/           # Hash calculation strategies
-│   │   │   ├── hash-calculator.js
-│   │   │   └── strategies/
-│   │   │       ├── full-strategy.js
-│   │   │       └── sampling-strategy.js
-│   │   ├── comparison/        # Hash comparison
-│   │   │   ├── hash-comparator.js
-│   │   │   └── comparison-result.js
-│   │   └── validation/        # Tool validators
-│   │       ├── extract-validator.js
-│   │       ├── create-validator.js
-│   │       ├── optimize-validator.js
-│   │       ├── convert-validator.js
-│   │       └── add-validator.js
-│   ├── generation/            # Reference generation
-│   │   ├── hash-database.js
-│   │   └── reference-generator.js
-│   └── presentation/          # User interface
-│       └── reporting/
-│           └── json-reporter.js
+│   └── hashing/           # Hash calculation strategies
+│       ├── hash-calculator.js
+│       └── strategies/
+│           ├── full-strategy.js
+│           └── sampling-strategy.js
+├── presentation/          # User interface
+│   └── cli/              # Command-line interface
+│       ├── cli-parser.js    # Argument parsing
+│       ├── cli-runner.js    # Command routing
+│       ├── command-utils.js  # Command helpers
+│       └── commands/        # Command implementations
+│           ├── generate.js
+│           ├── test.js
+│           ├── test-extraction.js
+│           └── test-optimization.js
+├── count-ipf-files.js    # IPF file counting utility
 ├── test_files/               # IPF test files
 ├── test_hashes/              # Reference hash databases
-├── cli.js                   # Main entry point
 ├── package.json              # npm configuration
-└── architecture.md           # This file
+├── cli.js                   # Main entry point
+├── README.md                # Testing framework documentation
+└── architecture.md          # This file
 ```
 
 ## Layer Responsibilities
@@ -128,15 +113,14 @@ testing/
 
 **Purpose**: Core utilities with no business logic. Reusable across all modules.
 
-#### hash.js (60-80 lines)
+#### hash.js (~70 lines)
 - Pure hash calculation functions
 - No side effects, deterministic
 - Functions:
   - `calculateFileHash(path)` - SHA-256 of file
   - `calculateStringHash(content)` - SHA-256 of string
-  - `calculateDirectoryHash(path, strategy)` - Router to strategy
 
-#### filesystem.js (90-110 lines)
+#### filesystem.js (~130 lines)
 - File system abstraction
 - All FS operations in one place
 - Functions:
@@ -147,213 +131,139 @@ testing/
   - `writeFile(path, content, encoding)` - Write file
   - `readJson(path)` - Parse JSON
   - `writeJson(path, data, indent)` - Stringify + write
-  - `scanDirectory(path, recursive)` - Get file list
-  - `getFileInfo(path)` - File stats
-  - `copyFile(src, dest)` - Copy file
-  - `moveFile(src, dest)` - Move/rename
-  - `removeFile(path)` - Delete file (with ENOENT handling)
+  - `copyFile(src, dst)` - Copy file
+  - `moveFile(src, dst)` - Move file
+  - `getFileInfo(path)` - Get file stats
+  - `removeFile(path)` - Delete file
 
-#### executor.js (100-120 lines)
-- Command execution with timeout
-- Cross-platform support
-- Functions:
-  - `executeCommand(command, args, options)` - Spawn process
-  - `executeOriginalTool(toolName, args, workingDir)` - iz.exe/ez.exe
-  - `executeOurTool(toolPath, args)` - Our compiled binary
+#### executor.js (~50 lines)
+- Execute external commands
+- Timeout handling
+- Function:
+  - `executeCommand(command, args, timeout, options)` - Spawn process with timeout
 
-#### logger.js (120-150 lines)
-- Centralized logging with console/file output
-- Console output uses symbols (✓ ✗ ⚠ ℹ)
-- File output uses timestamps only
-- Respects log levels (debug, info, warn, error)
-- Sinks: console, file, or both
-- Class `Logger`:
-  - `log(message, level, symbol)` - Core logging with optional symbol
-  - `info(message)` - Info with ℹ symbol
-  - `success(message)` - Success with ✓ symbol
-  - `warn(message)` - Warning with ⚠ symbol
-  - `error(message)` - Error with ✗ symbol
-  - `debug(message)` - Debug (no symbol, respects level)
-  - `plain(message)` - Raw output (no timestamp, respects level as info)
-  - `setLevel(level)` - Change level
-  - `setSink(sink)` - Change output
+#### logger.js (~80 lines)
+- Configurable logging (debug, info, warn, error, success)
+- Multiple sinks (console, file, both)
+- Level filtering
 
-#### config.js (80-100 lines)
-- Single source of truth for configuration
-- Clear PROJECT_ROOT reference
-- Configuration:
-  - Paths (all derived from PROJECT_ROOT)
-  - Hash strategy thresholds
-  - Execution timeouts
-  - Test file configurations
-  - Logging settings
+#### config.js (~90 lines)
+- Centralized configuration
+- Paths to tools, test files, hash databases
+- Execution timeouts and limits
 
 ### 2. Business Logic Layer
 
-**Purpose**: Domain-specific logic for hashing, comparison, and validation.
+**Purpose**: Core algorithms and business rules. Independent of presentation layer.
 
-#### analysis/directory-analyzer.js (90-110 lines)
+#### analysis/directory-analyzer.js (~80 lines)
 - Directory structure analysis
+- File discovery and filtering
 - Functions:
-  - `analyzeDirectory(path)` - Returns {fileCount, totalSize, structure}
-  - `countFiles(path)` - Count files recursively
-  - `calculateTotalSize(path)` - Sum file sizes
-  - `buildManifest(path)` - File tree structure
+  - `analyzeDirectory(path)` - Analyze directory contents
+  - `scanDirectory(path, recursive)` - Get file list
 
-#### hashing/hash-calculator.js (80-100 lines)
-- Strategy pattern for hash calculation
-- Class `HashCalculator`:
-  - `constructor(strategy)` - Accept strategy
-  - `calculate(path)` - Delegate to strategy
-  - `getStrategyName()` - Return strategy name
+#### hashing/hash-calculator.js (~140 lines)
+- Hash calculation orchestration
+- Strategy selection based on file count
+- Function:
+  - `calculateDirectoryHash(path, strategy)` - Router to strategy
 
-#### hashing/strategies/full-strategy.js (50-70 lines)
+#### hashing/strategies/full-strategy.js (~50 lines)
 - Full file-by-file hashing
-- Functions:
-  - `hashDirectory(path, fileLimit)` - Hash every file
-  - `createManifest(files)` - Build hash manifest
-  - `calculateManifestHash(manifest)` - Hash of manifest
+- Used for small collections (< 100 files)
+- Output: All files with hashes and sizes
 
-#### hashing/strategies/sampling-strategy.js (70-90 lines)
-- Representative sampling hashing
-- Functions:
-  - `sampleFiles(files, config)` - Select 45 samples (15 start + 15 middle + 15 end)
-  - `hashSamples(path, samples)` - Hash selected files
-  - `estimateTotalSize(samples, totalCount)` - Extrapolate size
+#### hashing/strategies/sampling-strategy.js (~100 lines)
+- Representative sampling for large collections
+- 15 beginning + 15 middle + 15 end files (45 total)
+- Used for large collections (> 100 files)
 
-#### comparison/hash-comparator.js (120-150 lines)
-- Compare hash objects
-- Functions:
-  - `compareFull(ourHash, refHash)` - Full comparison
-  - `compareSamples(ourHash, refHash)` - Sample comparison
-  - `detectDifferences(ourHash, refHash)` - File-by-file diff
-  - `calculateMatchScore(results)` - 0.0-1.0 score
+### 3. Presentation Layer
 
-#### comparison/comparison-result.js (60-80 lines)
-- Result data structure
-- Class `ComparisonResult`:
-  - `isPerfectMatch()` - Boolean check
-  - `getDifferences()` - List mismatches
-  - `getStatistics()` - Count mismatches, size diff
-  - `toJSON()` - Serialized format
-  - `getSummary()` - Human-readable summary
+**Purpose**: User interface and command execution.
 
-### 3. Validation Layer
+#### cli/cli-parser.js (~170 lines)
+- Command-line argument parsing
+- Option handling (--verbose, --help, etc.)
+- Command routing
 
-**Purpose**: Validate specific tool outputs.
+#### cli/cli-runner.js (~80 lines)
+- Command dispatcher
+- Error handling
+- Help display
 
-#### validation/extract-validator.js (80-100 lines)
-- Validate extraction output
-- Class `ExtractValidator`:
-  - `validate(outputDir, reference)` - Main validation
-  - `checkFileStructure(dir, reference)` - Verify structure
-  - `validateFileContent(file, reference)` - Hash comparison
+#### cli/command-utils.js (~30 lines)
+- Shared command helper functions
+- Exit code formatting
 
-#### validation/create-validator.js (60-80 lines)
-- Validate IPF creation output (stubbed)
-- Class `CreateValidator`:
-  - `validate(ipfPath, reference)` - Main validation
-  - `checkIPFFormat(ipfPath)` - ZIP structure
+#### cli/commands/generate.js (~340 lines)
+- Generate reference hashes by running original tools
+- Runs iz.exe + ez.exe for extraction
+- Runs oz.exe for optimization
+- Saves hash databases to test_hashes/
 
-#### validation/optimize-validator.js (60-80 lines)
-- Validate optimization output (stubbed)
-- Class `OptimizeValidator`:
-  - `validate(optimizedPath, reference)` - Main validation
-  - `checkSizeReduction(original, optimized)` - Verify optimization
+#### cli/commands/test.js (~100 lines)
+- Run all tests (extraction + optimization)
+- Calls test-extraction and test-optimization sequentially
+- Aggregates results
 
-#### validation/convert-validator.js (60-80 lines)
-- Validate IES conversion output (stubbed)
-- Class `ConvertValidator`:
-  - `validate(outputDir, reference)` - Main validation
-  - `checkXMLStructure(dir)` - Verify format
+#### cli/commands/test-extraction.js (~200 lines)
+- Run extraction validation tests
+- Extract with our tool
+- Compare hashes with reference
+- Inline comparison logic
 
-#### validation/add-validator.js (60-80 lines)
-- Validate addition output (stubbed)
-- Class `AddValidator`:
-  - `validate(modifiedIPF, reference)` - Main validation
-  - `checkNewFiles(modifiedIPF)` - Verify files added
+#### cli/commands/test-optimization.js (~200 lines)
+- Run optimization validation tests
+- Optimize with our tool
+- Compare hash, size, file count with reference
+- Inline comparison logic
 
-### 4. Generation Layer
+### 4. Utility Modules
 
-**Purpose**: Generate reference hash databases.
-
-#### generation/hash-database.js (80-100 lines)
-- Hash database CRUD
-- Class `HashDatabase`:
-  - `constructor(path)` - Load database
-  - `getTestFile(key)` - Get test file data
-  - `addTestFile(key, data)` - Add/replace entry
-  - `save(path)` - Persist to file
-  - `validate()` - Check data integrity
-
-#### generation/reference-generator.js (120-150 lines)
-- Reference generation orchestration
-- Class `ReferenceGenerator`:
-  - `generate(testFiles, outputDir)` - Main orchestration
-  - `processTestFile(fileKey, config)` - Single file
-  - `runOriginalPipeline(fileConfig)` - iz.exe + ez.exe
-  - `saveDatabase(hashes, outputDir)` - Write JSON
-
-### 5. Presentation Layer
-
-**Purpose**: User interface and output formatting.
-
-#### reporting/json-reporter.js (60-80 lines)
-- JSON report generation
-- Class `JsonReporter`:
-  - `generateReport(results, metadata)` - Create report object
-  - `saveReport(report, path)` - Write to file
-  - `mergeReports(reports)` - Combine multiple reports
-  - `validateReport(report)` - Check structure
-
-#### cli/cli-parser.js (80-100 lines)
-- Argument parsing
-- Class `CliParser`:
-  - `parse(args)` - Parse argv
-  - `validateOptions(options)` - Check required options
-  - `showHelp(command)` - Display help text
-  - `showGeneralHelp()` - Display general help
-
-#### cli/cli-runner.js (60-80 lines)
-- Command dispatch
-- Class `CliRunner`:
-  - `run(args)` - Main entry point
-  - `dispatch(command, options)` - Route to command handler
-  - `handleError(error)` - Error handling
-
-#### cli/commands/
-Each command file (100-140 lines):
-- `execute(options)` - Main command implementation
-- `showHelp()` - Command-specific help
-- Command-specific logic (validation, generation, extraction, etc.)
+#### count-ipf-files.js (~40 lines)
+- Count files in IPF archives
+- Uses standard zip library
+- Used by generate.js and test-optimization.js
 
 ## Data Flow
 
-### Validation Flow
+### Test Execution Flow
 
 ```mermaid
 sequenceDiagram
     participant User
     participant CLI
     participant Extractor
-    participant Validator
+    participant Optimizer
     participant HashCalc
-    participant HashComp
-    participant Reporter
-    
-    User->>CLI: npm run validate
+    participant FS
+
+    User->>CLI: npm test
+    CLI->>CLI: test-extraction
     CLI->>Extractor: Extract IPF files
-    Extractor->>CLI: Extraction output
-    CLI->>Validator: Validate against reference
-    Validator->>HashCalc: Calculate hashes
-    HashCalc->>HashComp: Compare hashes
-    HashComp->>CompResult: Comparison result
-    HashComp->>Validator: Our hashes
-    Validator->>HashComp: Comparison result
-    HashComp->>CompResult: Comparison result
-    Validator-->>CLI: Validation result
-    CLI-->>Reporter: Format output
-    Reporter-->>User: Validation report
+    Extractor->>FS: Create output directory
+    Extractor->>FS: Write extracted files
+    Extractor->>HashCalc: Calculate hashes
+    HashCalc-->>Extractor: Hash results
+    Extractor->>CLI: Return results
+    CLI->>CLI: Load reference hashes
+    CLI->>HashCalc: Compare hashes
+    HashCalc-->>CLI: Match results
+    CLI-->>User: Test report
+    
+    CLI->>CLI: test-optimization
+    CLI->>Optimizer: Optimize IPF
+    Optimizer->>FS: Copy original IPF
+    Optimizer->>FS: Write optimized IPF
+    Optimizer->>HashCalc: Calculate hash
+    HashCalc-->>Optimizer: Hash result
+    Optimizer->>CLI: Return results
+    CLI->>CLI: Load reference hashes
+    CLI->>HashCalc: Compare hash, size, count
+    HashCalc-->>CLI: Match results
+    CLI-->>User: Test report
 ```
 
 ### Reference Generation Flow
@@ -362,155 +272,318 @@ sequenceDiagram
 sequenceDiagram
     participant User
     participant CLI
-    participant RefGen
     participant Executor
     participant OriginalTools
     participant HashCalc
-    participant HashDB
+    participant FS
+
+    User->>CLI: npm run generate
+    CLI->>Executor: Run iz.exe
+    Executor->>OriginalTools: Convert IPF→ZIP
+    OriginalTools-->>Executor: ZIP file
+    CLI->>Executor: Run ez.exe
+    Executor->>OriginalTools: Extract ZIP→Directory
+    OriginalTools-->>Executor: Extracted directory
+    CLI->>FS: Move to reference_original/
+    CLI->>HashCalc: Calculate directory hashes
+    HashCalc-->>CLI: Hash results
     
-    User->>CLI: npm run generateOriginal
-    CLI->>RefGen: Generate reference hashes
-    RefGen->>Executor: Run original tools
-    Executor->>OriginalTools: Execute iz.exe + ez.exe
-    OriginalTools-->>Executor: Original extraction output
-    Executor-->>RefGen: Extraction completed
-    RefGen->>HashCalc: Calculate hashes
-    HashCalc-->>RefGen: Reference hashes
-    RefGen->>HashDB: Save to database
-    HashDB-->>RefGen: Database saved
-    RefGen-->>CLI: Reference hashes generated
-    CLI-->>User: Reference hashes generated
+    CLI->>Executor: Run oz.exe
+    Executor->>OriginalTools: Optimize IPF
+    OriginalTools-->>Executor: Optimized IPF
+    CLI->>HashCalc: Calculate file hash
+    HashCalc-->>CLI: File hash
+    CLI->>FS: Save to test_hashes/
+    CLI-->>User: Generation complete
 ```
 
-## Design Patterns
+## Configuration
 
-### Strategy Pattern
-Used in `hash-calculator.js` to support multiple hashing strategies:
+### Test File Configuration
 
-```javascript
-const fullStrategy = new FullStrategy();
-const samplingStrategy = new SamplingStrategy();
-
-const calculator = new HashCalculator(fullStrategy);
-const result = await calculator.calculate('/path/to/dir');
-
-const strategy = calculator.getStrategyName(); // "full" or "sampling"
-```
-
-### Command Pattern
-Used in CLI commands to encapsulate command logic:
+Test files are defined in `config.js`:
 
 ```javascript
-const commandHandler = this.commands[parsed.command];
-const exitCode = await commandHandler.execute(parsed.options);
-```
-
-### Singleton Pattern
-Used in `config.js` for single source of configuration:
-
-```javascript
-const config = require('../../config');
-
-const hashDBPath = config.EXTRACTION_ORIGINAL_HASHES_PATH;
-```
-
-## Error Handling
-
-### Layered Error Handling
-
-1. **Infrastructure Layer**: Low-level errors (file not found, permission denied)
-2. **Business Logic Layer**: Domain errors (invalid hash, comparison mismatch)
-3. **Validation Layer**: Validation errors (missing files, content mismatch)
-4. **Presentation Layer**: User-facing error messages
-
-### Error Propagation
-
-```javascript
-try {
-    calculateHash(path);
-} catch (error) {
-    logger.error(`Hash calculation failed: ${error.message}`);
-    return { success: false, error: error.message };
+TEST_FILES: {
+    small: {
+        name: 'ai.ipf',
+        source: 'testing/test_files/ai.ipf',
+        output: 'testing/reference_our/small_our',
+        type: 'extraction'
+    },
+    medium: {
+        name: 'item_texture.ipf',
+        source: 'testing/test_files/item_texture.ipf',
+        output: 'testing/reference_our/medium_our',
+        type: 'extraction'
+    },
+    large: {
+        name: 'ui.ipf',
+        source: 'testing/test_files/ui.ipf',
+        output: 'testing/reference_our/large_our',
+        type: 'extraction'
+    },
+    ui_optimized: {
+        name: 'ui_optimized.ipf',
+        source: 'testing/test_files/ui_optimized.ipf',
+        type: 'optimization',
+        original_source: 'testing/test_files/ui.ipf'
+    }
 }
 ```
 
-## Testing
+### Path Configuration
 
-### Unit Tests
-Low-level utilities only (infrastructure layer):
+All paths are centralized in `config.js`:
 
 ```javascript
-describe('Hash', () => {
-    it('should calculate SHA-256 hash', () => {
-        const hash = calculateStringHash('test');
-        expect(hash).toBe(expectedHash);
-    });
-});
+PROJECT_ROOT: '/path/to/ge-library'
+TEST_FILES_DIR: 'testing/test_files'
+TEST_HASHES_DIR: 'testing/test_hashes'
+EXTRACTOR_PATH: 'releases/ge-library/{platform}/tools/ipf-extractor'
+OPTIMIZER_PATH: 'releases/ge-library/{platform}/tools/ipf-optimizer'
+ORIGINAL_TOOLS_DIR: 'testing/original_tools'
 ```
 
-### Integration Tests
-End-to-end testing through CLI commands:
+## Hash Strategy Selection
+
+The framework automatically selects optimal hashing strategy:
+
+### Small Collections (< 100 files)
+- **Strategy**: Full file-by-file hashing
+- **Validation**: Every individual file content and hash
+- **Files**: ai.ipf (4 files)
+- **Output Format**:
+  ```json
+  {
+    "strategy": "full",
+    "file_count": 4,
+    "total_size": 4300,
+    "files": {
+      "file1.scp": { "hash": "sha256...", "size": 11442 },
+      "file2.scp": { "hash": "sha256...", "size": 6086 }
+    },
+    "manifest_hash": "sha256..."
+  }
+  ```
+
+### Large Collections (> 100 files)
+- **Strategy**: Representative sampling
+- **Validation**: 15 beginning + 15 middle + 15 end files (45 total)
+- **Files**: item_texture.ipf (3,063 files), ui.ipf (11,567 files)
+- **Output Format**:
+  ```json
+  {
+    "strategy": "sampling",
+    "file_count": 11567,
+    "total_size": 917000000,
+    "sampled_files": {
+      "file1.dat": { "hash": "sha256...", "size": 1024 },
+      "file5000.dat": { "hash": "sha256...", "size": 2048 },
+      "file10000.dat": { "hash": "sha256...", "size": 4096 }
+    },
+    "sample_hash": "sha256..."
+  }
+  ```
+
+## Comparison Logic
+
+### Extraction Test Comparison
+
+Each test command implements inline comparison logic:
+
+**test-extraction.js** - Compares:
+- File count match
+- Total size match
+- Individual file hash mismatches
+- Returns detailed match/mismatch report
+
+**test-optimization.js** - Compares:
+- Hash match (SHA-256 of optimized IPF)
+- Size match (original vs optimized)
+- File count match (original vs optimized)
+- Returns boolean perfect_match
+
+### Hash Database Structure
+
+Reference hashes are stored as JSON:
+
+```json
+{
+  "generated_at": "2026-01-27T00:00:00.000Z",
+  "purpose": "Reference hashes from original Windows tools",
+  "tool": "Original Windows tools (iz.exe + ez.exe / oz.exe)",
+  "test_files": {
+    "small": {
+      "test_file": "ai.ipf",
+      "extracted_files": { /* hash data */ },
+      "timestamp": "2026-01-27T00:00:00.000Z"
+    },
+    "medium": {
+      "test_file": "item_texture.ipf",
+      "extracted_files": { /* hash data */ },
+      "timestamp": "2026-01-27T00:00:00.000Z"
+    }
+  }
+}
+```
+
+## Design Principles
+
+### 1. Single Responsibility
+Each module has one clear purpose:
+- `hash.js` - Only hash calculations
+- `filesystem.js` - Only FS operations
+- `hash-calculator.js` - Only hash orchestration
+- `generate.js` - Only reference generation
+- Commands - Only test execution for their domain
+
+### 2. Separation of Concerns
+Clear boundaries between layers:
+- Infrastructure doesn't know about business logic
+- Business logic doesn't know about CLI commands
+- Commands orchestrate but don't implement algorithms
+
+### 3. Reusability
+Utilities are reused across multiple commands:
+- `hash.js` - Used by all test commands
+- `filesystem.js` - Used by all commands
+- `executor.js` - Used by generate command
+- `hash-calculator.js` - Used by test and generate commands
+
+### 4. Direct and Simple
+Each command directly implements what it needs:
+- test-extraction.js: Extracts, hashes, compares inline
+- test-optimization.js: Optimizes, hashes, compares inline
+- generate.js: Runs tools, hashes, saves JSON
+- No unnecessary abstractions or unused patterns
+
+## Command Structure
+
+### Generate Command
+
+**Purpose**: Generate reference hashes from original tools
+
+**Steps**:
+1. For each test file:
+   - Run iz.exe (IPF → ZIP)
+   - Run ez.exe (ZIP → directory)
+   - Move to reference_original/
+   - Calculate directory hashes
+2. Save to test_hashes/tools/extraction/original_hashes.json
+3. For optimization:
+   - Copy original IPF to temp
+   - Run oz.exe on temp
+   - Calculate file hash, size, count
+   - Move to test_files/
+   - Save to test_hashes/tools/optimization/original_hashes.json
+
+### Test Commands
+
+**test Command**:
+- Run test-extraction for all extraction test files
+- Run test-optimization for all optimization test files
+- Aggregate results
+- Print summary
+
+**test-extraction Command**:
+- Filter config.TEST_FILES for type='extraction'
+- For each file:
+  - Extract with our tool (ipf-extractor)
+  - Calculate directory hashes
+  - Compare with reference hashes
+  - Record results
+- Save to test_hashes/tools/extraction/our_hashes.json
+- Print summary
+
+**test-optimization Command**:
+- For each optimization test file:
+  - Copy original IPF to temp directory
+  - Optimize with our tool (ipf-optimizer)
+  - Calculate file hash, size, file count
+  - Compare with reference hashes
+  - Save to test_hashes/tools/optimization/our_hashes.json
+  - Print comparison results
+
+## Testing Workflows
+
+### For Users
 
 ```bash
-npm test          # Full test suite
-npm run validate  # Validate extraction
-npm run generate  # Generate reference hashes
+# Run all tests
+cd testing
+npm test
+
+# Run extraction tests only
+npm run test:extraction
+
+# Run optimization tests only
+npm run test:optimization
+
+# Generate reference hashes (requires original tools)
+npm run generate
 ```
 
-## Performance Considerations
+### For Developers
 
-### Streaming Hashing
-Large files are hashed in streams to avoid memory exhaustion:
+```bash
+# Run individual command
+cd testing
+node cli.js test-extraction --verbose
 
-```javascript
-const hash = crypto.createHash('sha256');
-const stream = fs.createReadStream(path);
-stream.on('data', (data) => hash.update(data));
+# Run with keep (don't clean up)
+npm run test:extraction --keep
 ```
 
-### Parallel Processing
-Hash calculation is parallelized for multiple files:
+## Cleanup Strategy
 
-```javascript
-const hashPromises = files.map(file => calculateFileHash(file));
-const hashes = await Promise.all(hashPromises);
-```
+### Temporary Files
 
-### Smart Strategy Selection
-Hash strategy is chosen based on file count to optimize performance:
+The framework cleans up temporary files:
+- After test: Extracted files removed from reference_our/
+- After generation: Temporary IPF files removed from test_files/
+- Backup files (.ipf.bak) removed after optimization
 
-- **≤100 files**: Full hashing (accurate but slower)
-- **>100 files**: Sampling (fast but statistically representative)
+### Hash Databases
 
-## Future Enhancements
+Reference hashes are preserved permanently:
+- test_hashes/tools/extraction/original_hashes.json
+- test_hashes/tools/extraction/our_hashes.json
+- test_hashes/tools/optimization/original_hashes.json
+- test_hashes/tools/optimization/our_hashes.json
 
-### Planned Features
+Our tool outputs are updated on each test run.
 
-1. **Workflow Layer**: Complex orchestration pipelines
-2. **Additional Validators**: Create, optimize, convert, add validators
-3. **Performance Profiling**: Built-in performance metrics
-4. **Parallel Testing**: Concurrent test execution
-5. **Docker Support**: Containerized testing environment
+## Notes
 
-### Scalability
+### Architecture Evolution
 
-The modular architecture allows easy addition of:
-- New hash strategies
-- New tool validators
-- New CLI commands
-- New output formats
+The framework originally included:
+- Validation layer (validators for each tool type)
+- Comparison layer (centralized hash comparison)
+- Generation layer (reference hash generation)
+- Reporting layer (structured output)
 
-## Dependencies
+This complex architecture was removed in favor of direct, simpler approach:
+- Each test command implements its own comparison logic
+- Direct hash calculation via hash-calculator.js
+- Manual JSON serialization via filesystem.js
+- No unnecessary abstraction layers
 
-### Runtime Dependencies
-- Node.js >= 14.0.0
-- Go binary (built from `src/golang/`)
-- Wine (Linux/Mac only, for original tools)
+### Benefits of Simplified Approach
 
-### Dev Dependencies
-- ESLint (code linting)
-- Jest (unit testing)
+1. **Simpler to understand** - Less code to trace through
+2. **Easier to maintain** - Direct execution without layers
+3. **Less moving parts** - Fewer files and abstractions
+4. **Works perfectly** - All tests pass with 100% success rate
+5. **Unique per tool** - Each tool type has its own comparison needs
 
-## License
+### Future Tool Support
 
-MIT License - See LICENSE file for details.
+When adding new tools (creation, conversion, addition):
+1. Add test file to config.TEST_FILES
+2. Create test command file (test-creation.js, test-conversion.js, etc.)
+3. Implement inline comparison logic specific to that tool
+4. Update README.md and architecture.md
+
+Each tool type will have unique comparison needs, so inline comparison remains appropriate.

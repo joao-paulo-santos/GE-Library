@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-01-25T14:31:27.255Z",
+  "generated_at": "2026-01-27T13:56:49.958Z",
   "purpose": "Reference hashes from oz.exe optimization tool",
   "tool": "oz.exe (IPF Optimizer)",
   "test_files": {
@@ -21,7 +21,7 @@
         "size_reduction_percent": 52.1,
         "file_reduction_count": 15003
       },
-      "timestamp": "2026-01-25T14:31:27.255Z"
+      "timestamp": "2026-01-27T13:56:49.958Z"
     }
   }
 }

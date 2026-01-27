@@ -74,29 +74,10 @@ npm test
 
 ## Testing
 
-We use a comprehensive testing framework to validate our tools against original Windows tools:
+We use a comprehensive testing framework to validate our tools against original Windows tools using hash-based comparison for byte-for-byte compatibility.
 
-- **Hash-based validation**: Compare outputs byte-for-byte
-- **Automated test suite**: Run extraction and optimization tests
-- **Cross-platform validation**: Verify consistent behavior across platforms
-
-### Phase 1: Foundation (Complete)
-- Reverse engineer `iz.exe`, `ez.exe`, and `oz.exe` functionality
-- Create Python reference implementation
-- Develop Go production implementation
-- Establish testing framework
-- Cross-platform compatibility
-
-### Phase 2: Complete Original Tool Suite (In Progress)
-- IPF Creation from Folder (`cz.exe` + `zi.exe` replication)
-- Add Folder to IPF (`af.exe` replication)
-- IES to XML/PRN Converter (`ix3.exe` replication)
-- GUI interface for tool selection and batch operations
-
-### Phase 3: Platform Enhancement (Planned)
-- Cross-platform GUI application
-- Comprehensive documentation and tutorials
-- Windows native performance benchmarks
+For testing framework usage and commands, see [Testing Framework](testing/README.md).
+For testing strategy and coverage, see [Testing Documentation](documentation/TESTING.md).
 
 ## Contributing
 

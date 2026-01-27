@@ -2,6 +2,11 @@
 
 Modular JavaScript validation framework for Granado Espada IPF tool implementations.
 
+## Related Documentation
+
+- [Project Testing Strategy](../documentation/TESTING.md) - Testing philosophy, types, and coverage
+- [Testing Framework Architecture](./architecture.md) - Technical architecture and implementation
+
 ## Overview
 
 This testing framework validates our open-source IPF tools against the original Windows tools (iz.exe, ez.exe, etc.) using hash-based comparison. The framework ensures 100% compatibility without distributing proprietary IPF files.
@@ -45,37 +50,6 @@ npm run generate
 
 # Generate reference hashes from original tool extractions
 # Note: This saves hashes to test_hashes/tools/extraction/original_hashes.json
-```
-
-## Architecture
-
-The testing framework uses a modular architecture with clear separation of concerns:
-
-```
-testing/
-├── src/
-│   ├── infrastructure/          # Core utilities
-│   │   ├── hash.js            # Hash calculation
-│   │   ├── filesystem.js      # File operations
-│   │   ├── executor.js        # Command execution
-│   │   ├── logger.js          # Logging
-│   │   └── config.js          # Configuration
-│   ├── business/              # Business logic
-│   │   ├── analysis/          # Directory analysis
-│   │   ├── hashing/           # Hash strategies
-│   │   ├── comparison/        # Hash comparison
-│   │   └── validation/        # Tool validators
-│   ├── generation/            # Reference generation
-│   │   ├── hash-database.js   # Hash database CRUD
-│   │   └── reference-generator.js  # Generate reference hashes
-│   ├── presentation/          # User interface
-│   │   ├── reporting/         # Output formatting
-│   │   └── cli/              # Command-line interface
-│   └── cli.js               # Main entry point
-├── test_files/               # IPF test files
-├── test_hashes/              # Reference hash databases
-├── package.json              # npm configuration
-└── README.md                # This file
 ```
 
 ## Directory Structure
@@ -138,12 +112,7 @@ The framework validates against three test files:
 | item_texture.ipf | 191MB | 3,063 | Sampling |
 | ui.ipf    | 877MB  | 11,567 | Sampling |
 
-### Hash Strategy Selection
-
-The framework automatically selects the appropriate hash strategy:
-
-- **≤100 files**: Full file-by-file hashing
-- **>100 files**: Representative sampling (15 beginning + 15 middle + 15 end)
+For detailed hash strategy explanation, see [Project Testing Strategy](../documentation/TESTING.md#hash-validation-features).
 
 ## Commands
 
@@ -312,6 +281,17 @@ Error: Command timed out
 ```javascript
 EXECUTION_TIMEOUT: 1200000,  // 20 minutes
 ```
+
+### Hash Mismatches
+
+```
+✗ large: Hash mismatch
+```
+
+**Solution**: Verify:
+1. Go binary is latest version
+2. Reference hashes are up to date
+3. No file corruption in test files
 
 ## License
 
