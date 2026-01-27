@@ -330,15 +330,15 @@ main() {
     step "Generating release notes..."
     
     release_notes_temp=$(mktemp)
-    
-    jq -r "
-      .releases[-1] | 
-      \"## Version \(.version) - \(.date)\n\" +
-      \"**Type:** \(.type)\n\n\" +
-      (if .changes then \"### Changes\n\" + ([.changes[] | \"• \(.)\"] | join(\"\n\")) + \"\n\n\" else \"\") +
-      (if .performance then \"### Performance\n\(.performance)\n\n\" else \"\") +
-      (if .known_issues then \"### Known Issues\n\" + ([.known_issues[] | \"• \(.)\"] | join(\"\n\")) + \"\n\" else \"\")
-    " "$RELEASE_NOTES_FILE" > "$release_notes_temp"
+
+    jq -r '
+      .releases[-1] |
+      "## Version \(.version) - \(.date)\n" +
+      "**Type:** \(.type)\n\n" +
+      (if .changes then "### Changes\n" + ([.changes[] | "• \(.)"] | join("\n")) + "\n\n" else "") +
+      (if .performance then "### Performance\n\(.performance)\n\n" else "") +
+      (if .known_issues then "### Known Issues\n" + ([.known_issues[] | "• \(.)"] | join("\n")) + "\n" else "")
+    ' "$RELEASE_NOTES_FILE" > "$release_notes_temp"
     
     if [ "$DRY_RUN" = true ]; then
         dry_run "Release notes generated (preview):"
