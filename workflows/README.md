@@ -4,6 +4,59 @@ This folder contains build and release workflow scripts.
 
 ## Scripts
 
+### release.sh
+
+Automated release script that performs complete release workflow with GitHub integration.
+
+**Features:**
+- Validates prerequisites (main branch, no uncommitted changes, gh CLI, jq)
+- Extracts version from release_notes.json
+- Checks for existing releases
+- Runs tests before creating release branch
+- Creates release branch (releases/<version>)
+- Builds all platform packages
+- Creates git tag v<version>
+- Pushes to GitHub
+- Creates GitHub release with version-specific notes
+- Attaches all platform zip files as assets
+- Dry-run mode for safe validation
+
+**Commands:**
+```bash
+./workflows/release.sh [options]
+```
+
+Options:
+- `--dry-run`    Validate and preview release without executing
+- `--help, -h`   Show help message
+
+**Examples:**
+```bash
+# Perform actual release
+./workflows/release.sh
+
+# Preview release without making changes
+./workflows/release.sh --dry-run
+```
+
+**Workflow:**
+1. Validate prerequisites (main branch, no uncommitted changes, gh CLI, jq)
+2. Extract version from release_notes.json
+3. Check release doesn't already exist
+4. Run tests (Go + Node)
+5. Create release branch (releases/<version>)
+6. Build all platform packages
+7. Create git tag v<version>
+8. Push to GitHub
+9. Create GitHub release with assets
+
+**Requirements:**
+- Must be on main branch
+- No uncommitted changes
+- GitHub CLI (`gh`) installed and authenticated
+- `jq` installed (for JSON parsing)
+- Go, Node.js, and Make installed (for building)
+
 ### build.sh
 
 Main build wrapper that organizes all build operations. Provides a clean, organized interface to the Makefile build system.
@@ -69,30 +122,59 @@ node workflows/generate_patchnotes.js
 
 ## Workflow
 
-The complete release workflow:
+### Automated Release (Recommended)
 
 1. **Edit release notes**
-   ```bash
-   vim documentation/release_notes/release_notes.json
-   vim documentation/release_notes/README.txt
-   ```
+    ```bash
+    vim documentation/release_notes/release_notes.json
+    vim documentation/release_notes/README.txt
+    ```
+
+2. **Run automated release**
+    ```bash
+    ./workflows/release.sh
+    ```
+
+    This automatically:
+    - Validates prerequisites (main branch, no uncommitted changes, gh CLI)
+    - Checks release doesn't already exist
+    - Runs tests (Go + Node)
+    - Creates release branch (releases/<version>)
+    - Builds all 6 platforms
+    - Creates git tag v<version>
+    - Pushes to GitHub
+    - Creates GitHub release with version-specific notes
+    - Attaches all platform zip files as assets
+
+    **Dry-run mode** (validate without executing):
+    ```bash
+    ./workflows/release.sh --dry-run
+    ```
+
+### Manual Release (Legacy)
+
+1. **Edit release notes**
+    ```bash
+    vim documentation/release_notes/release_notes.json
+    vim documentation/release_notes/README.txt
+    ```
 
 2. **Build release**
-   ```bash
-   ./workflows/build.sh release
-   ```
+    ```bash
+    ./workflows/build.sh release
+    ```
 
-   This automatically:
-   - Generates PATCHNOTES.txt from JSON
-   - Cleans previous builds
-   - Downloads dependencies
-   - Runs tests
-   - Builds all 6 platforms
-   - Creates release packages
-   - Cleans up generated PATCHNOTES.txt
+    This automatically:
+    - Generates PATCHNOTES.txt from JSON
+    - Cleans previous builds
+    - Downloads dependencies
+    - Runs tests
+    - Builds all 6 platforms
+    - Creates release packages
+    - Cleans up generated PATCHNOTES.txt
 
 3. **Distribute**
-   Upload zip files from `releases/ge-library/`
+    Manually upload zip files from `releases/ge-library/` to GitHub releases
 
 ## Output
 
