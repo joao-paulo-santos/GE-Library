@@ -342,7 +342,7 @@ TEST_FILES_DIR: 'testing/test_files'
 TEST_HASHES_DIR: 'testing/test_hashes'
 EXTRACTOR_PATH: 'releases/ge-library/{platform}/tools/ipf-extractor'
 OPTIMIZER_PATH: 'releases/ge-library/{platform}/tools/ipf-optimizer'
-ORIGINAL_TOOLS_DIR: 'testing/original_tools'
+ORIGINAL_BINARIES_DIR: 'testing/original_tools'
 ```
 
 ## Hash Strategy Selection

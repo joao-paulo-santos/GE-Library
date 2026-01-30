@@ -178,30 +178,6 @@ Options:
   --help, -h         Show help message
 ```
 
-## Configuration
-
-Configuration is in `src/config.js`:
-
-```javascript
-{
-    // Paths
-    PROJECT_ROOT: '/path/to/ge-library',
-    TEST_FILES_DIR: 'testing/test_files',
-    TEST_HASHES_DIR: 'testing/test_hashes',
-    EXTRACTOR_PATH: 'src/golang/build/ipf-extractor',
-
-    // Hash strategy threshold
-    HASH_STRATEGY_THRESHOLD: 100,  // Files count threshold
-
-    // Execution timeouts
-    EXECUTION_TIMEOUT: 600000,     // 10 minutes
-    EXTRACTOR_TIMEOUT: 600000,
-
-    // Logging
-    LOG_LEVEL: 'info',            // debug, info, warn, error
-    LOG_SINK: 'console'           // console, file, both
-}
-```
 
 ## CI/CD Integration
 

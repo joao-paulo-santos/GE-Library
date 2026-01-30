@@ -17,11 +17,14 @@ const { countIPFFiles } = require('../../count-ipf-files');
 
 const logger = new Logger(config.LOG_LEVEL, config.LOG_SINK, config.LOG_FILE);
 
-const ORIGINAL_BIN = path.join(config.ORIGINAL_TOOLS_DIR, 'iz.exe');
+const ORIGINAL_BIN = path.join(config.ORIGINAL_BINARIES_DIR, 'iz.exe');
 const REFERENCE_DIR = path.join(__dirname, '../../../reference_original');
 const OUTPUT_FILE = config.EXTRACTION_ORIGINAL_HASHES_PATH;
-const OZ_BIN = path.join(config.ORIGINAL_TOOLS_DIR, 'oz.exe');
+const OZ_BIN = path.join(config.ORIGINAL_BINARIES_DIR, 'oz.exe');
 const OPTIMIZATION_OUTPUT_FILE = config.OPTIMIZATION_ORIGINAL_HASHES_PATH;
+const CZ_BIN = path.join(config.ORIGINAL_BINARIES_DIR, 'cz.exe');
+const ZI_BIN = path.join(config.ORIGINAL_BINARIES_DIR, 'zi.exe');
+const CREATION_OUTPUT_FILE = config.CREATION_ORIGINAL_HASHES_PATH;
 
 const testFiles = {
     small: {
@@ -41,6 +44,12 @@ const testFiles = {
         source: path.join(config.TEST_FILES_DIR, 'ui_optimized.ipf'),
         type: 'optimization',
         original_source: path.join(config.TEST_FILES_DIR, 'ui.ipf')
+    },
+    ui_creation: {
+        name: 'ui.ipf (creation test)',
+        source_folder: path.join(config.TEST_FILES_DIR, 'ui_extracted'),
+        original_created_ipf: path.join(config.TEST_FILES_DIR, 'ui_reference_created.ipf'),
+        type: 'creation'
     }
 };
 
@@ -76,7 +85,7 @@ async function extractWithOriginalTools(ipfPath, testKey) {
     // IMPORTANT: ez.exe extracts to current working directory
     // It creates directory named after ZIP filename (without .zip extension)
     const ezResult = await executeCommand(
-        path.join(config.ORIGINAL_TOOLS_DIR, 'ez.exe'),
+        path.join(config.ORIGINAL_BINARIES_DIR, 'ez.exe'),
         [`${ipfBaseName}.zip`],
         config.EXECUTION_TIMEOUT,
         { cwd: config.TEST_FILES_DIR }
@@ -149,10 +158,19 @@ async function generateAll(options) {
         test_files: {}
     };
 
+    const creationResults = {
+        generated_at: new Date().toISOString(),
+        purpose: 'Reference hashes for IPF creation validation',
+        tool: 'Original Windows tools (cz.exe + zi.exe)',
+        test_files: {}
+    };
+
     let extractionSuccess = 0;
     let extractionFailed = 0;
     let optimizationSuccess = 0;
     let optimizationFailed = 0;
+    let creationSuccess = 0;
+    let creationFailed = 0;
 
     for (const [key, fileConfig] of Object.entries(testFiles)) {
         logger.info(`Processing ${fileConfig.name} (${key})...`);
@@ -164,6 +182,13 @@ async function generateAll(options) {
                     optimizationSuccess++;
                 } else {
                     optimizationFailed++;
+                }
+            } else if (fileConfig.type === 'creation') {
+                const result = await generateCreationHash(fileConfig, key, options);
+                if (result === 0) {
+                    creationSuccess++;
+                } else {
+                    creationFailed++;
                 }
             } else {
                 const extractDir = await extractWithOriginalTools(fileConfig.source, key);
@@ -188,6 +213,8 @@ async function generateAll(options) {
             logger.error(`Failed to process ${fileConfig.name}: ${error.message}`);
             if (fileConfig.type === 'optimization') {
                 optimizationFailed++;
+            } else if (fileConfig.type === 'creation') {
+                creationFailed++;
             } else {
                 extractionFailed++;
                 extractionResults.test_files[key] = {
@@ -198,6 +225,7 @@ async function generateAll(options) {
             }
         }
     }
+
 
     logger.info('\n=== Saving Reference Databases ===');
 
@@ -211,6 +239,10 @@ async function generateAll(options) {
             logger.info(`Optimization hashes saved to: ${OPTIMIZATION_OUTPUT_FILE}`);
         }
 
+        if (creationSuccess > 0 || creationFailed > 0) {
+            logger.info(`Creation hashes saved to: ${CREATION_OUTPUT_FILE}`);
+        }
+
         logger.info('\n=== Summary ===');
         if (extractionSuccess > 0 || extractionFailed > 0) {
             logger.info(`Extraction - Successful: ${extractionSuccess}, Failed: ${extractionFailed}`);
@@ -218,8 +250,11 @@ async function generateAll(options) {
         if (optimizationSuccess > 0 || optimizationFailed > 0) {
             logger.info(`Optimization - Successful: ${optimizationSuccess}, Failed: ${optimizationFailed}`);
         }
+        if (creationSuccess > 0 || creationFailed > 0) {
+            logger.info(`Creation - Successful: ${creationSuccess}, Failed: ${creationFailed}`);
+        }
 
-        return (extractionFailed === 0 && optimizationFailed === 0) ? 0 : 1;
+        return (extractionFailed === 0 && optimizationFailed === 0 && creationFailed === 0) ? 0 : 1;
     } catch (error) {
         logger.error(`Failed to save reference hashes: ${error.message}`);
         return 1;
@@ -235,6 +270,87 @@ function formatBytes(bytes) {
         unitIndex++;
     }
     return `${size.toFixed(1)} ${units[unitIndex]}`;
+}
+
+
+async function generateCreationHash(testConfig, testKey, options) {
+    logger.info(`Generating creation hashes for ${testConfig.name}...`);
+    try {
+        const folderName = path.basename(testConfig.source_folder);
+        const tempZip = path.join(config.TEST_FILES_DIR, `${folderName}.zip`);
+
+        logger.debug(`Running cz.exe on ${folderName} folder...`);
+        const czResult = await executeCommand(
+            CZ_BIN,
+            [folderName],
+            config.EXECUTION_TIMEOUT,
+            { cwd: config.TEST_FILES_DIR }
+        );
+
+        if (!czResult.success) {
+            throw new Error(`cz.exe failed: ${czResult.error || czResult.stderr}`);
+        }
+        logger.debug(`cz.exe created ZIP: ${tempZip}`);
+
+        if (!fileExists(tempZip)) {
+            throw new Error(`cz.exe did not create expected ZIP: ${tempZip}`);
+        }
+
+        logger.debug(`Running zi.exe on ${tempZip}...`);
+        const ziResult = await executeCommand(
+            ZI_BIN,
+            [path.basename(tempZip)],
+            config.EXECUTION_TIMEOUT,
+            { cwd: config.TEST_FILES_DIR }
+        );
+
+        if (!ziResult.success) {
+            throw new Error(`zi.exe failed: ${ziResult.error || ziResult.stderr}`);
+        }
+
+        const createdIpfPath = path.join(config.TEST_FILES_DIR, `${folderName}.zip.ipf`);
+        if (!fileExists(createdIpfPath)) {
+            throw new Error(`zi.exe did not create expected IPF: ${createdIpfPath}`);
+        }
+
+        logger.debug(`zi.exe created IPF: ${createdIpfPath}`);
+
+        await removeFile(tempZip);
+
+        await moveFile(createdIpfPath, testConfig.original_created_ipf);
+
+        const ipfHash = await calculateFileHash(testConfig.original_created_ipf);
+        const ipfStats = getFileInfo(testConfig.original_created_ipf);
+        const fileCount = countIPFFiles(testConfig.original_created_ipf);
+
+        const results = {
+            generated_at: new Date().toISOString(),
+            purpose: 'Reference hashes for IPF creation validation',
+            tool: 'Original Windows tools (cz.exe + zi.exe)',
+            test_files: {}
+        };
+        results.test_files[testKey] = {
+            original_created_ipf: {
+                test_file: path.basename(testConfig.original_created_ipf),
+                source_folder: folderName,
+                size_bytes: ipfStats.size,
+                file_count: fileCount,
+                sha256: ipfHash
+            },
+            timestamp: new Date().toISOString()
+        };
+        await writeJson(CREATION_OUTPUT_FILE, results, 2);
+        logger.success(`Creation hashes generated successfully`);
+        logger.info(`Database saved to: ${CREATION_OUTPUT_FILE}`);
+        if (options.verbose) {
+            logger.plain(`  Created IPF: ${formatBytes(ipfStats.size)} (${ipfHash.substring(0, 8)}...)`);
+            logger.plain(`  File count: ${fileCount}`);
+        }
+        return 0;
+    } catch (error) {
+        logger.error(`Creation hash generation failed: ${error.message}`);
+        return 1;
+    }
 }
 
 async function generateOptimizationHash(testConfig, testKey, options) {
@@ -353,6 +469,7 @@ module.exports = {
     },
 
     generateOptimizationHash,
+    generateCreationHash,
     generateAll,
 
     showHelp() {
