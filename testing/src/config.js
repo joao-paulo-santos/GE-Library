@@ -14,12 +14,20 @@ const PROJECT_ROOT = path.resolve(__dirname, '../..');
 const TEST_FILES_DIR = path.join(PROJECT_ROOT, 'testing/test_files'); // Reference test files (ipf)
 
 const OUR_REFERENCES_DIR = path.join(PROJECT_ROOT, 'testing/reference_our'); // Where we store the output of our tools while their hashes are being calculated, cleaned after
+const ORIGINAL_REFERENCES_DIR = path.join(PROJECT_ROOT, 'testing/reference_original'); // Where the output from the original tools is stored, not cleaned since original tools are slow and not re-run often
 
 // Releases and binaries
 const RELEASES_DIR = path.join(PROJECT_ROOT, 'releases');
 const OUR_RELEASES_DIR = path.join(RELEASES_DIR, `ge-library/${PLATFORM_TARGET}`);
 const OUR_BINARIES_DIR = path.join(OUR_RELEASES_DIR, `tools`);
 const ORIGINAL_BINARIES_DIR = path.join(PROJECT_ROOT, 'releases/original/bin');
+
+// Original Binaries
+const EZ_BIN = path.join(ORIGINAL_BINARIES_DIR, 'ez.exe');
+const IZ_BIN = path.join(ORIGINAL_BINARIES_DIR, 'iz.exe');
+const OZ_BIN = path.join(ORIGINAL_BINARIES_DIR, 'oz.exe');
+const CZ_BIN = path.join(ORIGINAL_BINARIES_DIR, 'cz.exe');
+const ZI_BIN = path.join(ORIGINAL_BINARIES_DIR, 'zi.exe');
 
 // Helper functions to build paths
 const getOsFileName = (fileName) => {
@@ -104,11 +112,17 @@ module.exports = {
     PROJECT_ROOT,
     TEST_FILES_DIR,
     OUR_REFERENCES_DIR,
+    ORIGINAL_REFERENCES_DIR,
     RELEASES_DIR,
     OUR_RELEASES_DIR,
     OUR_BINARIES_DIR,
     ORIGINAL_BINARIES_DIR,
     TEST_HASHES_DIR,
+    EZ_BIN,
+    IZ_BIN,
+    OZ_BIN,
+    CZ_BIN,
+    ZI_BIN,
 
     // Helper functions
     getOsFileName,
