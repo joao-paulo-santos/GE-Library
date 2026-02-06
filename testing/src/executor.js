@@ -99,7 +99,7 @@ async function executeWineCommand(command, args, options = {}) {
  */
 async function executeOriginalTool(toolName, args, workingDir = null) {
     const config = require('./config');
-    const toolPath = path.join(config.ORIGINAL_TOOLS_DIR, toolName);
+    const toolPath = path.join(config.ORIGINAL_BINARIES_DIR, toolName);
 
     const options = {};
     if (workingDir) {
@@ -122,7 +122,7 @@ async function executeOurTool(extractorPath, args) {
     return executeCommand(
         extractorPath,
         args,
-        config.EXTRACTOR_TIMEOUT
+        config.EXECUTION_TIMEOUT
     );
 }
 
