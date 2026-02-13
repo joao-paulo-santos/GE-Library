@@ -1,4 +1,4 @@
-# Granado Espada Tool Library
+# Granado Espada Tool Library (v0.2)
 
 An open-source library providing modern alternatives to tools used in Granado Espada development and modding. This project replicates and enhances the functionality of original tools while optimizing for modern hardware and providing true cross-platform compatibility.
 
@@ -11,25 +11,31 @@ This project creates open-source alternatives to the closed-source Windows tools
 - **Open development** with community contributions
 - **100% compatibility** with original file formats
 
-## Currently Completed Tools
+## Completed Tools
 
-### IPF Archive Extractor (v0.1)
+### IPF Archive Extractor
 - **Replicates**: `iz.exe` + `ez.exe` functionality for IPF archive extraction
 - **Performance**: Faster than original tools (10-15x when tested under Wine, Windows benchmarks pending)
 - **Compatibility**: Byte-for-byte identical output when compared to original tools
 - **Implementations**: Python (reference/development) + Go (production)
 
-### IPF Archive Optimizer (v0.1)
+### IPF Archive Optimizer
 - **Replicates**: `oz.exe` functionality for IPF optimization
 - **Features**: Removes duplicate files from IPF archives to reduce size
-- **Performance**: Significantly reduces file count and archive size
+- **Performance**: Significantly reduces file count and archive size (52% size reduction on test archives)
 - **Compatibility**: Byte-for-byte identical output when compared to original tools
+- **Implementation**: Go (production)
+
+### IPF Archive Creator
+- **Replicates**: `cz.exe` + `zi.exe` functionality for creating IPF archives from folders
+- **Features**: Single-pass creation (folder to IPF directly), optional encryption, configurable compression
+- **Performance**: Faster than original two-step workflow (cz.exe + zi.exe)
+- **Compatibility**: 100% compatible with original IPF format
 - **Implementation**: Go (production)
 
 ## Planned Future Tools
 
 ### IPF Management Tools
-- **Create IPF from Folder**: Replicate `cz.exe` + `zi.exe` functionality for creating IPF archives from folders
 - **Add Folder to IPF**: Replicate `af.exe` functionality for adding content to existing IPF files
 
 ### Data Conversion Tools
@@ -51,7 +57,13 @@ Download pre-compiled binary for your system from the `releases/` directory:
 ./ipf-extractor -input archive.ipf -workers 0 -verbose
 
 # Optimize an IPF archive (removes duplicate files)
-./ipf-optimizer -input archive.ipf -backup
+./ipf-optimizer archive.ipf
+
+# Optimize with backup
+./ipf-optimizer -backup archive.ipf
+
+# Create an IPF archive from a folder
+./ipf-creator -folder ./my_files -output archive.ipf
 ```
 
 ### For Developers

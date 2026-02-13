@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-01-27T13:55:22.807Z",
+  "generated_at": "2026-02-13T13:12:48.627Z",
   "purpose": "Hashes from our Go IPF extractor",
-  "tool": "Our Go IPF extractor",
+  "tool": "ipf-extractor (Go implementation)",
   "test_files": {
     "small": {
       "test_file": "ai.ipf",
@@ -29,7 +29,7 @@
         },
         "manifest_hash": "39eaf84e7604eb3ac38e49c8caf16e6284f100c6a18fe9f435d66d386c088c8c"
       },
-      "timestamp": "2026-01-27T13:55:20.625Z"
+      "timestamp": "2026-02-13T13:12:48.636Z"
     },
     "medium": {
       "test_file": "item_texture.ipf",
@@ -221,7 +221,7 @@
         },
         "sample_hash": "898e2c1b2cb36e6dbe6b7a3a5d2b786ae0b09527a1193756e9b4b5c9eb34a25c"
       },
-      "timestamp": "2026-01-27T13:55:21.174Z"
+      "timestamp": "2026-02-13T13:12:49.207Z"
     },
     "large": {
       "test_file": "ui.ipf",
@@ -413,7 +413,7 @@
         },
         "sample_hash": "e3f58add1979b69b2fbbb7e55c6b06b95956a8b9a487573a1dc117a7e9e52f59"
       },
-      "timestamp": "2026-01-27T13:55:22.807Z"
+      "timestamp": "2026-02-13T13:12:50.937Z"
     }
   }
 }

@@ -9,6 +9,7 @@
     "test:keep": "node cli.js test --keep",
     "test:extraction": "node cli.js test-extraction",
     "test:optimization": "node cli.js test-optimization",
+    "test:creation": "node cli.js test-creation",
     "help": "node cli.js --help"
   },
   "keywords": [

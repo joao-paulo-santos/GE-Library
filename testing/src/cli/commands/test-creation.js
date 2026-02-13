@@ -2,25 +2,26 @@
 
 const { executeCommand } = require('../../executor');
 const { calculateDirectoryHash } = require('../../hashing/hash-calculator');
-const { fileExists, ensureDir, removeDir, writeJson, readJson, cleanup } = require('../../filesystem');
+const { fileExists, ensureDir, removeDir, writeJson, readJson, removeFile, cleanup } = require('../../filesystem');
 const path = require('path');
 const Logger = require('../../logger');
 const config = require('../../config');
+const { formatBytes } = require('../../generators/base');
 
 const logger = new Logger(config.LOG_LEVEL, config.LOG_SINK, config.LOG_FILE);
 
 async function execute(options) {
-    logger.info('=== Running Extraction Test ===\n');
+    logger.info('=== Running Creation Test ===\n');
 
-    if (!fileExists(config.EXTRACTION_ORIGINAL_HASHES_PATH)) {
-        logger.error(`Original reference hashes not found: ${config.EXTRACTION_ORIGINAL_HASHES_PATH}`);
+    if (!fileExists(config.CREATION_ORIGINAL_HASHES_PATH)) {
+        logger.error(`Original reference hashes not found: ${config.CREATION_ORIGINAL_HASHES_PATH}`);
         logger.info('Please run: npm run generate');
         return 1;
     }
 
     let originalHashes;
     try {
-        originalHashes = readJson(config.EXTRACTION_ORIGINAL_HASHES_PATH);
+        originalHashes = readJson(config.CREATION_ORIGINAL_HASHES_PATH);
     } catch (error) {
         logger.error(`Failed to load original hashes: ${error.message}`);
         return 1;
@@ -28,17 +29,17 @@ async function execute(options) {
 
     const ourHashes = {
         generated_at: new Date().toISOString(),
-        purpose: 'Hashes from our Go IPF extractor',
-        tool: 'ipf-extractor (Go implementation)',
+        purpose: 'Hashes from our ipf-creator tool',
+        tool: 'ipf-creator (Go implementation)',
         test_files: {}
     };
 
     const results = { test_run_at: new Date().toISOString(), test_files: {} };
 
-    const extractionTests = Object.entries(config.TEST_FILES)
-        .filter(([key, fileConfig]) => fileConfig.type === 'extraction');
+    const creationTests = Object.entries(config.TEST_FILES)
+        .filter(([key, fileConfig]) => fileConfig.type === 'creation');
 
-    for (const [key, fileConfig] of extractionTests) {
+    for (const [key, fileConfig] of creationTests) {
         logger.info(`\n--- Testing ${fileConfig.name} (${key}) ---`);
 
         if (!fileExists(fileConfig.source)) {
@@ -47,32 +48,65 @@ async function execute(options) {
             continue;
         }
 
-        const tempDir = path.join(config.TEMP_DIR, `test_extraction_${key}`);
+        const tempDir = path.join(config.TEMP_DIR, `test_creation_${key}`);
+        const sourceFolder = path.join(tempDir, 'source');
+        const tempIpf = path.join(tempDir, 'created.ipf');
+        const extractDir = path.join(tempDir, 'extracted');
 
         try {
             cleanup(tempDir);
-            ensureDir(tempDir);
+            ensureDir(sourceFolder);
 
-            logger.info('Extracting with our tool...');
-            const startTime = Date.now();
-            const result = await executeCommand(
+            logger.info('Extracting source IPF to get source folder...');
+            const preExtractResult = await executeCommand(
                 config.EXTRACTOR_PATH,
-                ['-input', fileConfig.source, '-output', tempDir],
+                ['-input', fileConfig.source, '-output', sourceFolder],
+                config.EXECUTION_TIMEOUT
+            );
+
+            if (!preExtractResult.success) {
+                throw new Error(`Pre-extraction failed: ${preExtractResult.error || preExtractResult.stderr}`);
+            }
+
+            logger.info('Creating IPF with our tool...');
+            const startTime = Date.now();
+            const createResult = await executeCommand(
+                config.CREATOR_PATH,
+                ['-folder', sourceFolder, '-output', tempIpf],
                 config.EXECUTION_TIMEOUT
             );
             const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
 
-            if (!result.success) {
-                throw new Error(result.error || result.stderr || 'Unknown error');
+            if (!createResult.success) {
+                throw new Error(createResult.error || createResult.stderr || 'Unknown error');
             }
 
-            logger.success(`Extraction completed in ${elapsed}s`);
+            if (!fileExists(tempIpf)) {
+                throw new Error('ipf-creator did not create expected IPF file');
+            }
 
-            logger.info('Generating hashes from our output...');
-            const ourHash = await calculateDirectoryHash(tempDir);
+            logger.success(`IPF creation completed in ${elapsed}s`);
+
+            logger.info('Extracting created IPF with our extractor...');
+            ensureDir(extractDir);
+            
+            const extractResult = await executeCommand(
+                config.EXTRACTOR_PATH,
+                ['-input', tempIpf, '-output', extractDir],
+                config.EXECUTION_TIMEOUT
+            );
+
+            if (!extractResult.success) {
+                throw new Error(`Extraction failed: ${extractResult.error || extractResult.stderr}`);
+            }
+
+            logger.success('Extraction completed');
+
+            logger.info('Generating hashes from extracted contents...');
+            const ourHash = await calculateDirectoryHash(extractDir);
             ourHashes.test_files[key] = { test_file: fileConfig.name, extracted_files: ourHash, timestamp: new Date().toISOString() };
 
-            logger.info('Comparing with original reference hashes...');
+            logger.info('Comparing with reference extracted hashes...');
             const referenceData = originalHashes.test_files[key]?.extracted_files;
             if (!referenceData) {
                 logger.error(`No reference data for ${key}`);
@@ -87,7 +121,7 @@ async function execute(options) {
             if (comparison.perfectMatch) {
                 logger.success(`${key}: Perfect match!`);
             } else {
-                logger.error(`${key}: Files do not match`);
+                logger.error(`${key}: Extracted contents do not match`);
                 if (comparison.details.mismatches) {
                     logger.verbose(`Mismatches: ${comparison.details.mismatches.length} files`);
                 }
@@ -95,14 +129,14 @@ async function execute(options) {
 
             if (!options.keep) cleanup(tempDir);
         } catch (error) {
-            logger.error(`Extraction failed: ${error.message}`);
-            results.test_files[key] = { test_file: fileConfig.name, status: 'extraction_failed', error: error.message, timestamp: new Date().toISOString() };
+            logger.error(`Test failed: ${error.message}`);
+            results.test_files[key] = { test_file: fileConfig.name, status: 'failed', error: error.message, timestamp: new Date().toISOString() };
             cleanup(tempDir);
         }
     }
 
-    await writeJson(config.EXTRACTION_OUR_HASHES_PATH, ourHashes, 2);
-    logger.info(`Our hashes saved to: ${config.EXTRACTION_OUR_HASHES_PATH}`);
+    await writeJson(config.CREATION_OUR_HASHES_PATH, ourHashes, 2);
+    logger.info(`Our hashes saved to: ${config.CREATION_OUR_HASHES_PATH}`);
 
     const totalTests = Object.keys(results.test_files).length;
     const perfectMatches = Object.values(results.test_files).filter(t => t.perfect_match).length;
@@ -142,35 +176,54 @@ function compareHashes(ourHash, referenceHash) {
 
 function showHelp() {
     return `
-test-extraction - Run extraction validation test
+test-creation - Run creation validation test
 
 Usage:
-    npm run test:extraction
-    npm run test:extraction -- --verbose
-    npm run test:extraction -- --keep
+    npm run test:creation
+    npm run test:creation -- --verbose
+    npm run test:creation -- --keep
 
 Description:
-    Extracts test IPF files using our ipf-extractor tool, generates
-    hashes, and compares against reference hashes from original tools.
+    Creates IPF files from extracted contents using our ipf-creator,
+    extracts the result with ipf-extractor, and compares against
+    reference hashes from original tools.
 
 Prerequisites:
     - Reference hashes must exist (run: npm run generate)
     - IPF files must be in testing/test_files/
-    - ipf-extractor binary must be built
+    - ipf-creator and ipf-extractor binaries must be built
 
 Options:
     --verbose, -v      Enable detailed output
-    --keep              Keep extracted files for debugging
+    --keep              Keep temp files for debugging
     --help, -h         Show this help message
 
 Test Files:
-    small    - ai.ipf (4 files)
-    medium   - item_texture.ipf (3,063 files)
-    large    - ui.ipf (11,568 files)
+    ui_creation - ui.ipf
 
 Output:
-    - Hashes saved to: test_hashes/tools/extraction/our_hashes.json
+    - Hashes saved to: test_hashes/tools/creation/our_hashes.json
     `;
+}
+
+async function main() {
+    const CliParser = require('../cli-parser');
+    const parser = new CliParser();
+    const options = parser.parse(process.argv.slice(2));
+
+    if (options.showHelp) {
+        console.log(showHelp());
+        return 0;
+    }
+
+    return await execute(options);
+}
+
+if (require.main === module) {
+    main().catch(err => {
+        logger.error(`Fatal error: ${err.message}`);
+        process.exit(1);
+    });
 }
 
 module.exports = { execute, showHelp };

@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-01-27T13:52:19.685Z",
+  "generated_at": "2026-02-13T13:12:51.066Z",
   "purpose": "Hashes from our ipf-optimizer tool",
   "tool": "ipf-optimizer (Go implementation)",
   "test_files": {
-    "ui_optimized": {
+    "ui_optimization": {
       "optimized": {
-        "test_file": "ui_optimized.ipf",
+        "test_file": "ui.ipf optimization",
         "size_bytes": 441422642,
         "file_count": 11568,
         "sha256": "0fdb99878d34721c1da93e5b6fd04590e84613aa93c1da5870db2a99adc40f44"
@@ -16,7 +16,7 @@
         "count_match": true,
         "perfect_match": true
       },
-      "timestamp": "2026-01-27T13:52:19.685Z"
+      "timestamp": "2026-02-13T13:12:51.912Z"
     }
   }
 }

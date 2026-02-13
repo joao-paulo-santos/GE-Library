@@ -22,12 +22,12 @@ func (z *ZipCipher) InitKeys(password []byte) {
 
 // UpdateCipher updates the cipher state with a byte
 func (z *ZipCipher) UpdateCipher(byteVal byte) {
-	z.Keys[0] = UpdateCRC32(z.Keys[0], byteVal)
+	z.Keys[0] = updateCRC32(z.Keys[0], byteVal)
 	z.Keys[1] = (z.Keys[1] + (z.Keys[0] & 0xFF)) & 0xFFFFFFFF
 	z.Keys[1] = (z.Keys[1] * 134775813) & 0xFFFFFFFF
 	z.Keys[1] = z.Keys[1] + 1
 	keyshift := z.Keys[1] >> 24
-	z.Keys[2] = UpdateCRC32(z.Keys[2], byte(keyshift))
+	z.Keys[2] = updateCRC32(z.Keys[2], byte(keyshift))
 }
 
 // DecryptByte performs the PKZIP decryption for a single byte

@@ -1,10 +1,11 @@
 {
-  "generated_at": "2026-01-27T13:55:47.091Z",
+  "generated_at": "2026-02-13T01:17:33.447Z",
   "purpose": "Reference hashes from original Windows tools (iz.exe + ez.exe)",
   "tool": "Original Windows tools (iz.exe + ez.exe)",
   "test_files": {
     "small": {
       "test_file": "ai.ipf",
+      "timestamp": "2026-02-13T01:17:33.447Z",
       "extracted_files": {
         "strategy": "full",
         "file_count": 4,
@@ -29,10 +30,11 @@
         },
         "manifest_hash": "39eaf84e7604eb3ac38e49c8caf16e6284f100c6a18fe9f435d66d386c088c8c"
       },
-      "timestamp": "2026-01-27T13:55:56.468Z"
+      "success": true
     },
     "medium": {
       "test_file": "item_texture.ipf",
+      "timestamp": "2026-02-13T01:17:42.651Z",
       "extracted_files": {
         "strategy": "sampling",
         "file_count": 3063,
@@ -221,10 +223,11 @@
         },
         "sample_hash": "898e2c1b2cb36e6dbe6b7a3a5d2b786ae0b09527a1193756e9b4b5c9eb34a25c"
       },
-      "timestamp": "2026-01-27T13:56:10.105Z"
+      "success": true
     },
     "large": {
       "test_file": "ui.ipf",
+      "timestamp": "2026-02-13T01:17:56.171Z",
       "extracted_files": {
         "strategy": "sampling",
         "file_count": 11568,
@@ -413,7 +416,7 @@
         },
         "sample_hash": "e3f58add1979b69b2fbbb7e55c6b06b95956a8b9a487573a1dc117a7e9e52f59"
       },
-      "timestamp": "2026-01-27T13:56:42.240Z"
+      "success": true
     }
   }
 }

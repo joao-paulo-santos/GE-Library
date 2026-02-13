@@ -21,8 +21,14 @@ function ensureDir(dirPath) {
  * @param {string} dirPath - Directory to remove
  */
 function removeDir(dirPath) {
-    if (fs.existsSync(dirPath)) {
-        fs.rmSync(dirPath, { recursive: true, force: true });
+    try {
+        if (fs.existsSync(dirPath)) {
+            fs.rmSync(dirPath, { recursive: true, force: true });
+        }
+    } catch (error) {
+        if (error.code !== 'ENOENT') {
+            throw error;
+        }
     }
 }
 
@@ -147,6 +153,22 @@ function removeFile(filePath) {
     }
 }
 
+/**
+ * Clean up multiple paths (files or directories)
+ * @param {...string} paths - Paths to remove
+ */
+function cleanup(...paths) {
+    for (const p of paths) {
+        try {
+            fs.rmSync(p, { recursive: true, force: true });
+        } catch (error) {
+            if (error.code !== 'ENOENT') {
+                throw error;
+            }
+        }
+    }
+}
+
 module.exports = {
     ensureDir,
     removeDir,
@@ -159,5 +181,6 @@ module.exports = {
     getFileInfo,
     copyFile,
     moveFile,
-    removeFile
+    removeFile,
+    cleanup
 };

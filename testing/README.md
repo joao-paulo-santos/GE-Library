@@ -29,9 +29,10 @@ npm test
 This will:
 1. Extract all test IPF files (ai.ipf, item_texture.ipf, ui.ipf)
 2. Optimize ui.ipf and compare with reference
-3. Generate hashes from our output
-4. Compare with reference hashes from original tools
-5. Report validation results
+3. Create IPF from extracted files and compare with reference
+4. Generate hashes from our output
+5. Compare with reference hashes from original tools
+6. Report validation results
 
 ### Run Individual Commands
 
@@ -69,7 +70,7 @@ The testing framework uses a three-directory structure:
   - Note: Hashes always preserved, extracted files cleaned unless `--keep` flag used
 
 **Future Scalability:**
-As additional tools are implemented (optimization, creation, conversion, addition), the structure will expand:
+As additional tools are implemented (conversion, addition), the structure will expand:
 ```
 test_hashes/tools/
 ├── extraction/
@@ -178,6 +179,19 @@ Options:
   --help, -h         Show help message
 ```
 
+### test-creation
+
+Run creation validation test only.
+
+```bash
+npm run test:creation [options]
+
+Options:
+  --verbose, -v      Enable detailed output
+  --keep             Keep temp files for debugging
+  --help, -h         Show help message
+```
+
 
 ## CI/CD Integration
 
@@ -192,6 +206,9 @@ npm run test:extraction
 
 # Run optimization tests only
 npm run test:optimization
+
+# Run creation tests only
+npm run test:creation
 ```
 
 ## For Maintainers

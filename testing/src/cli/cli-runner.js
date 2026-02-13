@@ -15,7 +15,8 @@ class CliRunner {
             generate: require('./commands/generate.js'),
             test: require('./commands/test.js'),
             'test-extraction': require('./commands/test-extraction.js'),
-            'test-optimization': require('./commands/test-optimization.js')
+            'test-optimization': require('./commands/test-optimization.js'),
+            'test-creation': require('./commands/test-creation.js')
         };
     }
 
