@@ -11,6 +11,7 @@ GOMOD=$(GOCMD) mod
 # Binary names
 BINARY_NAME_EXTRACTOR=ipf-extractor
 BINARY_NAME_OPTIMIZER=ipf-optimizer
+BINARY_NAME_CREATOR=ipf-creator
 BINARY_UNIX=$(BINARY_NAME_EXTRACTOR)_unix
 
 # Build flags
@@ -55,6 +56,7 @@ build:
 	@mkdir -p $(DIST_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)/tools
 	CGO_ENABLED=0 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)/tools/$(BINARY_NAME_EXTRACTOR) ./cmd/ipf-extractor
 	CGO_ENABLED=0 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)/tools/$(BINARY_NAME_OPTIMIZER) ./cmd/ipf-optimizer
+	CGO_ENABLED=0 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)/tools/$(BINARY_NAME_CREATOR) ./cmd/ipf-creator
 
 # Build for all platforms
 .PHONY: build-all
@@ -67,6 +69,7 @@ build-linux:
 	mkdir -p $(DIST_DIR)/linux-amd64/tools
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/linux-amd64/tools/$(BINARY_NAME_EXTRACTOR) ./cmd/ipf-extractor
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/linux-amd64/tools/$(BINARY_NAME_OPTIMIZER) ./cmd/ipf-optimizer
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/linux-amd64/tools/$(BINARY_NAME_CREATOR) ./cmd/ipf-creator
 
 # Build for Linux (arm64)
 .PHONY: build-linux-arm64
@@ -75,6 +78,7 @@ build-linux-arm64:
 	mkdir -p $(DIST_DIR)/linux-arm64/tools
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/linux-arm64/tools/$(BINARY_NAME_EXTRACTOR) ./cmd/ipf-extractor
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/linux-arm64/tools/$(BINARY_NAME_OPTIMIZER) ./cmd/ipf-optimizer
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/linux-arm64/tools/$(BINARY_NAME_CREATOR) ./cmd/ipf-creator
 
 # Build for Windows (amd64)
 .PHONY: build-windows
@@ -83,6 +87,7 @@ build-windows:
 	mkdir -p $(DIST_DIR)/windows-amd64/tools
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/windows-amd64/tools/$(BINARY_NAME_EXTRACTOR).exe ./cmd/ipf-extractor
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/windows-amd64/tools/$(BINARY_NAME_OPTIMIZER).exe ./cmd/ipf-optimizer
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/windows-amd64/tools/$(BINARY_NAME_CREATOR).exe ./cmd/ipf-creator
 
 # Build for Windows (arm64)
 .PHONY: build-windows-arm64
@@ -91,6 +96,7 @@ build-windows-arm64:
 	mkdir -p $(DIST_DIR)/windows-arm64/tools
 	CGO_ENABLED=0 GOOS=windows GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/windows-arm64/tools/$(BINARY_NAME_EXTRACTOR).exe ./cmd/ipf-extractor
 	CGO_ENABLED=0 GOOS=windows GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/windows-arm64/tools/$(BINARY_NAME_OPTIMIZER).exe ./cmd/ipf-optimizer
+	CGO_ENABLED=0 GOOS=windows GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/windows-arm64/tools/$(BINARY_NAME_CREATOR).exe ./cmd/ipf-creator
 
 # Build for macOS (amd64)
 .PHONY: build-darwin
@@ -99,6 +105,7 @@ build-darwin:
 	mkdir -p $(DIST_DIR)/darwin-amd64/tools
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/darwin-amd64/tools/$(BINARY_NAME_EXTRACTOR) ./cmd/ipf-extractor
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/darwin-amd64/tools/$(BINARY_NAME_OPTIMIZER) ./cmd/ipf-optimizer
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/darwin-amd64/tools/$(BINARY_NAME_CREATOR) ./cmd/ipf-creator
 
 # Build for macOS (arm64)
 .PHONY: build-darwin-arm64
@@ -107,6 +114,7 @@ build-darwin-arm64:
 	mkdir -p $(DIST_DIR)/darwin-arm64/tools
 	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/darwin-arm64/tools/$(BINARY_NAME_EXTRACTOR) ./cmd/ipf-extractor
 	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/darwin-arm64/tools/$(BINARY_NAME_OPTIMIZER) ./cmd/ipf-optimizer
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/darwin-arm64/tools/$(BINARY_NAME_CREATOR) ./cmd/ipf-creator
 
 # Build release versions
 .PHONY: release
@@ -132,6 +140,7 @@ dev:
 	mkdir -p $(BUILD_DIR)
 	$(GOBUILD) -race -o $(BUILD_DIR)/$(BINARY_NAME_EXTRACTOR)-dev ./cmd/ipf-extractor
 	$(GOBUILD) -race -o $(BUILD_DIR)/$(BINARY_NAME_OPTIMIZER)-dev ./cmd/ipf-optimizer
+	$(GOBUILD) -race -o $(BUILD_DIR)/$(BINARY_NAME_CREATOR)-dev ./cmd/ipf-creator
 
 # Run with development build
 .PHONY: run
