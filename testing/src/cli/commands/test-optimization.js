@@ -1,146 +1,170 @@
 #!/usr/bin/env node
 
 const { executeCommand } = require('../../executor');
-const { ensureDir, removeDir, fileExists, getFileInfo, copyFile, writeJson } = require('../../filesystem');
+const { ensureDir, removeDir, fileExists, getFileInfo, copyFile, writeJson, readJson, cleanup } = require('../../filesystem');
 const { calculateFileHash } = require('../../hash');
-const { readJson } = require('../../filesystem');
 const path = require('path');
 const Logger = require('../../logger');
 const config = require('../../config');
 const { countIPFFiles } = require('../../count-ipf-files');
+const { formatBytes } = require('../../generators/base');
 
 const logger = new Logger(config.LOG_LEVEL, config.LOG_SINK, config.LOG_FILE);
 
-const OPTIMIZER_BIN = config.OPTIMIZER_PATH;
-const OPTIMIZATION_ORIGINAL_HASHES = config.OPTIMIZATION_ORIGINAL_HASHES_PATH;
-const OPTIMIZATION_OUR_HASHES = config.OPTIMIZATION_OUR_HASHES_PATH;
+async function execute(options) {
+    logger.info('=== Running Optimization Test ===\n');
 
-const testFiles = {
-    ui_optimized: {
-        name: 'ui_optimized.ipf',
-        source: path.join(config.TEST_FILES_DIR, 'ui_optimized.ipf'),
-        type: 'optimization',
-        original_source: path.join(config.TEST_FILES_DIR, 'ui.ipf')
-    }
-};
-
-async function runOptimizationTest(testKey, options) {
-    const testConfig = testFiles[testKey];
-    if (!testConfig) {
-        logger.error(`Unknown test file: ${testKey}`);
+    if (!fileExists(config.OPTIMIZATION_ORIGINAL_HASHES_PATH)) {
+        logger.error(`Original reference hashes not found: ${config.OPTIMIZATION_ORIGINAL_HASHES_PATH}`);
+        logger.info('Please run: npm run generate');
         return 1;
     }
 
-    logger.info(`=== Testing ${testKey} ===`);
-
-    const tempDir = path.join(config.TEST_FILES_DIR, `temp_opt_${Date.now()}`);
-    ensureDir(tempDir);
-
+    let originalHashes;
     try {
-        const tempOriginal = path.join(tempDir, path.basename(testConfig.original_source));
-
-        logger.info(`Copying original IPF...`);
-        copyFile(testConfig.original_source, tempOriginal);
-
-        logger.info(`Running our optimizer...`);
-        const startTime = Date.now();
-        const optimizerResult = await executeCommand(
-            OPTIMIZER_BIN,
-            ['--backup', tempOriginal],
-            config.EXECUTION_TIMEOUT
-        );
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
-
-        if (!optimizerResult.success) {
-            logger.error(`Optimizer failed: ${optimizerResult.stderr || optimizerResult.error}`);
-            return 1;
-        }
-
-        logger.success(`Optimization completed in ${elapsed}s`);
-
-        const optimizedPath = tempOriginal;
-        const optimizedStats = getFileInfo(optimizedPath);
-        const optimizedHash = await calculateFileHash(optimizedPath);
-        const optimizedFileCount = countIPFFiles(optimizedPath);
-
-        logger.info(`Our optimized: ${formatBytes(optimizedStats.size)} (${optimizedHash.substring(0, 8)}...), ${optimizedFileCount} files`);
-
-        const referenceHashes = readJson(config.OPTIMIZATION_ORIGINAL_HASHES_PATH);
-        const referenceData = referenceHashes.test_files[testKey];
-
-        if (!referenceData) {
-            logger.error(`No reference data found for ${testKey}`);
-            return 1;
-        }
-
-        const { optimized } = referenceData;
-
-        logger.info(`Reference oz.exe: ${formatBytes(optimized.size_bytes)} (${optimized.sha256.substring(0, 8)}...), ${optimized.file_count} files`);
-
-        const hashMatch = optimizedHash === optimized.sha256;
-        const sizeMatch = Math.abs(optimizedStats.size - optimized.size_bytes) === 0;
-        const countMatch = optimizedFileCount === optimized.file_count;
-
-        logger.info(`\nComparison:`);
-        logger.info(`  Hash match: ${hashMatch ? '✓' : '✗'}`);
-        logger.info(`  Size match: ${sizeMatch ? '✓' : '✗'}`);
-        logger.info(`  File count match: ${countMatch ? '✓' : '✗'}`);
-
-        const perfectMatch = hashMatch && sizeMatch && countMatch;
-        
-        // Save our optimizer's output hash for historical tracking
-        const ourHashResult = {
-            generated_at: new Date().toISOString(),
-            purpose: 'Hashes from our ipf-optimizer tool',
-            tool: 'ipf-optimizer (Go implementation)',
-            test_files: {}
-        };
-        
-        ourHashResult.test_files[testKey] = {
-            optimized: {
-                test_file: testConfig.name,
-                size_bytes: optimizedStats.size,
-                file_count: optimizedFileCount,
-                sha256: optimizedHash
-            },
-            validation: {
-                hash_match: hashMatch,
-                size_match: sizeMatch,
-                count_match: countMatch,
-                perfect_match: perfectMatch
-            },
-            timestamp: new Date().toISOString()
-        };
-        
-        await writeJson(OPTIMIZATION_OUR_HASHES, ourHashResult, 2);
-        logger.debug(`Our hash saved to: ${OPTIMIZATION_OUR_HASHES}`);
-        
-        if (perfectMatch) {
-            logger.success(`✓ ${testKey}: Perfect match!`);
-        } else {
-            logger.error(`✗ ${testKey}: Validation failed`);
-        }
-
-        return perfectMatch ? 0 : 1;
+        originalHashes = readJson(config.OPTIMIZATION_ORIGINAL_HASHES_PATH);
     } catch (error) {
-        logger.error(`Test failed: ${error.message}`);
+        logger.error(`Failed to load original hashes: ${error.message}`);
         return 1;
-    } finally {
-        if (fileExists(tempDir)) {
-            removeDir(tempDir);
+    }
+
+    const ourHashes = {
+        generated_at: new Date().toISOString(),
+        purpose: 'Hashes from our ipf-optimizer tool',
+        tool: 'ipf-optimizer (Go implementation)',
+        test_files: {}
+    };
+
+    const results = { test_run_at: new Date().toISOString(), test_files: {} };
+
+    const optimizationTests = Object.entries(config.TEST_FILES)
+        .filter(([key, fileConfig]) => fileConfig.type === 'optimization');
+
+    for (const [key, fileConfig] of optimizationTests) {
+        logger.info(`\n--- Testing ${fileConfig.name} (${key}) ---`);
+
+        if (!fileExists(fileConfig.source)) {
+            logger.error(`Source IPF not found: ${fileConfig.source}`);
+            results.test_files[key] = { test_file: fileConfig.name, status: 'skipped', error: 'Source IPF not found', timestamp: new Date().toISOString() };
+            continue;
+        }
+
+        const tempDir = path.join(config.TEMP_DIR, `test_optimization_${key}`);
+        const tempIpf = path.join(tempDir, 'source.ipf');
+
+        try {
+            cleanup(tempDir);
+            ensureDir(tempDir);
+
+            logger.info('Copying source IPF...');
+            copyFile(fileConfig.source, tempIpf);
+
+            logger.info('Running our optimizer...');
+            const startTime = Date.now();
+            const optimizerResult = await executeCommand(
+                config.OPTIMIZER_PATH,
+                ['--backup', tempIpf],
+                config.EXECUTION_TIMEOUT
+            );
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+
+            if (!optimizerResult.success) {
+                throw new Error(optimizerResult.stderr || optimizerResult.error || 'Unknown error');
+            }
+
+            logger.success(`Optimization completed in ${elapsed}s`);
+
+            const optimizedStats = getFileInfo(tempIpf);
+            const optimizedHash = await calculateFileHash(tempIpf);
+            const optimizedFileCount = countIPFFiles(tempIpf);
+
+            logger.info(`Our optimized: ${formatBytes(optimizedStats.size)} (${optimizedHash.substring(0, 8)}...), ${optimizedFileCount} files`);
+
+            const referenceData = originalHashes.test_files[key]?.optimized;
+            if (!referenceData) {
+                logger.error(`No reference data for ${key}`);
+                results.test_files[key] = { test_file: fileConfig.name, status: 'no_reference', error: 'No reference data available', timestamp: new Date().toISOString() };
+                cleanup(tempDir);
+                continue;
+            }
+
+            logger.info(`Reference oz.exe: ${formatBytes(referenceData.size_bytes)} (${referenceData.sha256.substring(0, 8)}...), ${referenceData.file_count} files`);
+
+            const hashMatch = optimizedHash === referenceData.sha256;
+            const sizeMatch = Math.abs(optimizedStats.size - referenceData.size_bytes) === 0;
+            const countMatch = optimizedFileCount === referenceData.file_count;
+
+            logger.info('\nComparison:');
+            logger.info(`  Hash match: ${hashMatch ? '✓' : '✗'}`);
+            logger.info(`  Size match: ${sizeMatch ? '✓' : '✗'}`);
+            logger.info(`  File count match: ${countMatch ? '✓' : '✗'}`);
+
+            const perfectMatch = hashMatch && sizeMatch && countMatch;
+
+            ourHashes.test_files[key] = {
+                optimized: { test_file: fileConfig.name, size_bytes: optimizedStats.size, file_count: optimizedFileCount, sha256: optimizedHash },
+                validation: { hash_match: hashMatch, size_match: sizeMatch, count_match: countMatch, perfect_match: perfectMatch },
+                timestamp: new Date().toISOString()
+            };
+
+            results.test_files[key] = { test_file: fileConfig.name, status: 'complete', perfect_match: perfectMatch, hash_match: hashMatch, size_match: sizeMatch, count_match: countMatch, timestamp: new Date().toISOString() };
+
+            if (perfectMatch) {
+                logger.success(`${key}: Perfect match!`);
+            } else {
+                logger.error(`${key}: Validation failed`);
+            }
+
+            cleanup(tempDir);
+        } catch (error) {
+            logger.error(`Test failed: ${error.message}`);
+            results.test_files[key] = { test_file: fileConfig.name, status: 'failed', error: error.message, timestamp: new Date().toISOString() };
+            cleanup(tempDir);
         }
     }
+
+    await writeJson(config.OPTIMIZATION_OUR_HASHES_PATH, ourHashes, 2);
+    logger.info(`Our hashes saved to: ${config.OPTIMIZATION_OUR_HASHES_PATH}`);
+
+    const totalTests = Object.keys(results.test_files).length;
+    const perfectMatches = Object.values(results.test_files).filter(t => t.perfect_match).length;
+    const successRate = totalTests > 0 ? (perfectMatches / totalTests) : 0;
+
+    logger.info('\n=== Test Summary ===');
+    logger.info(`Total test files: ${totalTests}`);
+    logger.info(`Perfect matches: ${perfectMatches}`);
+    logger.info(`Success rate: ${(successRate * 100).toFixed(1)}%`);
+
+    return successRate === 1 ? 0 : 1;
 }
 
-function formatBytes(bytes) {
-    const units = ['B', 'KB', 'MB', 'GB'];
-    let size = bytes;
-    let unitIndex = 0;
-    while (size >= 1024 && unitIndex < units.length - 1) {
-        size /= 1024;
-        unitIndex++;
-    }
-    return `${size.toFixed(1)} ${units[unitIndex]}`;
+function showHelp() {
+    return `
+test-optimization - Run optimization validation test
+
+Usage:
+    npm run test:optimization
+    npm run test:optimization -- --verbose
+
+Description:
+    Optimizes IPF files using our ipf-optimizer tool and compares
+    against reference oz.exe output (hash, size, file count).
+
+Prerequisites:
+    - Reference hashes must exist (run: npm run generate)
+    - IPF files must be in testing/test_files/
+    - ipf-optimizer binary must be built
+
+Options:
+    --verbose, -v      Enable detailed output
+    --help, -h         Show this help message
+
+Test Files:
+    ui_optimization - ui.ipf
+
+Output:
+    - Hashes saved to: test_hashes/tools/optimization/our_hashes.json
+    `;
 }
 
 async function main() {
@@ -149,23 +173,11 @@ async function main() {
     const options = parser.parse(process.argv.slice(2));
 
     if (options.showHelp) {
-        console.log('test-optimization [options] [test-key]\n');
-        console.log('Test IPF optimization against reference oz.exe output.\n');
-        console.log('Options:');
-        console.log('  --verbose, -v     Enable detailed output');
-        console.log('  --quiet, -q       Suppress console output');
-        console.log('  --help, -h        Show this help message');
-        console.log('\nTest keys:');
-        Object.keys(testFiles).forEach(key => {
-            console.log(`  ${key}`);
-        });
-        console.log('\nExample:');
-        console.log('  node cli.js test-optimization ui_optimized');
+        console.log(showHelp());
         return 0;
     }
 
-    const testKey = options.testKey || 'ui_optimized';
-    return await runOptimizationTest(testKey, options);
+    return await execute(options);
 }
 
 if (require.main === module) {
@@ -175,22 +187,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = {
-    async execute(options) {
-        const testKey = options.testKey || 'ui_optimized';
-        return await runOptimizationTest(testKey, options);
-    },
-
-    showHelp() {
-        return 'test-optimization [options] [test-key]\n\n' +
-            'Test IPF optimization against reference oz.exe output.\n\n' +
-            'Options:\n' +
-            '  --verbose, -v     Enable detailed output\n' +
-            '  --quiet, -q       Suppress console output\n' +
-            '  --help, -h        Show this help message\n\n' +
-            'Test keys:\n' +
-            Object.keys(testFiles).map(key => `  ${key}`).join('\n') +
-            '\n\nExample:\n' +
-            '  node cli.js test-optimization ui_optimized';
-    }
-};
+module.exports = { execute, showHelp };

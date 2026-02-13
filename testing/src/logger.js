@@ -11,15 +11,9 @@ class Logger {
         this.level = level;
         this.sink = sink;
         this.logFile = logFile;
-        this.levels = { debug: 0, info: 1, warn: 2, error: 3 };
+        this.levels = { debug: 0, verbose: 1, info: 2, warn: 3, error: 4 };
     }
 
-    /**
-     * Core logging method
-     * @param {string} message - Message to log
-     * @param {string} level - Log level (debug, info, warn, error)
-     * @param {string} symbol - Optional symbol for console output
-     */
     log(message, level = 'info', symbol = null) {
         if (this.levels[level] < this.levels[this.level]) {
             return;
@@ -61,18 +55,14 @@ class Logger {
         this.log(message, 'debug');
     }
 
-    /**
-     * Print success message with checkmark
-     * @param {string} message - Message to log
-     */
+    verbose(message) {
+        this.log(message, 'verbose', '  ');
+    }
+
     success(message) {
         this.log(message, 'info', '✓');
     }
 
-    /**
-     * Print plain message without timestamp or symbol
-     * @param {string} message - Message to log
-     */
     plain(message) {
         if (this.levels['info'] < this.levels[this.level]) {
             return;
@@ -91,10 +81,6 @@ class Logger {
         }
     }
 
-    /**
-     * Change log level
-     * @param {string} level - New log level
-     */
     setLevel(level) {
         if (!(level in this.levels)) {
             throw new Error(`Invalid log level: ${level}`);
@@ -102,10 +88,6 @@ class Logger {
         this.level = level;
     }
 
-    /**
-     * Change output sink
-     * @param {string} sink - New sink (console, file, both)
-     */
     setSink(sink) {
         const validSinks = ['console', 'file', 'both'];
         if (!validSinks.includes(sink)) {
