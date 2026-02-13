@@ -9,7 +9,7 @@ This document covers testing procedures to validate our Granado Espada Tool Libr
 
 ## Current Project Status
 
-Our project aims to recreate the complete getools.bat tool suite. Currently, we've completed IPF extraction and IPF optimization, and are working on the remaining tools: IPF creation, IES conversion, and folder management.
+Our project aims to recreate the complete getools.bat tool suite. Currently, we've completed IPF extraction, IPF optimization, and IPF creation. Remaining tools include: IES conversion and folder management.
 
 ## Testing Framework
 
@@ -57,11 +57,10 @@ Platform Requirements:
 - **Windows**: Native execution of iz.exe, ez.exe, and oz.exe tools
 - **Linux/Mac**: Wine installed and configured for Windows tool execution
 
-## Future Tool Testing (In Progress)
+## Future Tool Testing
 
 ### Upcoming Tools to Test
 
-- **IPF Creation** (`cz.exe` + `zi.exe` replication)
 - **IES Conversion** (`ix3.exe` replication)
 - **Folder Addition** (`af.exe` replication)
 
@@ -111,9 +110,13 @@ Verifies consistent behavior across Linux, Windows, and macOS for users who can'
   - Validation rate: 100% success (hash, size, file count all match)
   - Performance: Optimizes duplicate file removal
 
-### In Progress
+- **IPF Creation**: Full validation against `cz.exe` + `zi.exe`
+  - Test files: ui.ipf (extract → create → extract → compare)
+  - Validation rate: 100% success (extracted content matches reference)
+  - Performance: Faster than original two-step workflow
 
-- **IPF Creation**: Validation against `cz.exe` + `zi.exe`
+### Planned Tools
+
 - **IES Conversion**: Validation against `ix3.exe`
 - **Folder Management**: Validation against `af.exe`
 

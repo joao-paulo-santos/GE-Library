@@ -35,6 +35,7 @@ graph TB
         IPF[IPF Files]
         GoBinary[Go IPF Extractor]
         GoOptimizer[Go IPF Optimizer]
+        GoCreator[Go IPF Creator]
         OriginalTools[Original Tools]
     end
     
@@ -44,11 +45,16 @@ graph TB
     Runner --> TestCmd
     Runner --> TestExtractionCmd
     Runner --> TestOptimizationCmd
+    Runner --> TestCreationCmd
     
     TestExtractionCmd --> HashCalc
     TestExtractionCmd --> GoBinary
     
     TestOptimizationCmd --> GoOptimizer
+    
+    TestCreationCmd --> HashCalc
+    TestCreationCmd --> GoCreator
+    TestCreationCmd --> GoBinary
     
     GenerateCmd --> HashCalc
     GenerateCmd --> Executor
@@ -97,7 +103,8 @@ testing/
 │           ├── generate.js
 │           ├── test.js
 │           ├── test-extraction.js
-│           └── test-optimization.js
+│           ├── test-optimization.js
+│           └── test-creation.js
 ├── count-ipf-files.js    # IPF file counting utility
 ├── test_files/               # IPF test files
 ├── test_hashes/              # Reference hash databases
@@ -505,6 +512,16 @@ Each command directly implements what it needs:
   - Save to test_hashes/tools/optimization/our_hashes.json
   - Print comparison results
 
+**test-creation Command**:
+- For each creation test file:
+  - Extract source IPF with our extractor
+  - Create new IPF with our creator
+  - Extract created IPF with our extractor
+  - Calculate directory hashes
+  - Compare with reference extracted hashes
+  - Save to test_hashes/tools/creation/our_hashes.json
+  - Print comparison results
+
 ## Testing Workflows
 
 ### For Users
@@ -519,6 +536,9 @@ npm run test:extraction
 
 # Run optimization tests only
 npm run test:optimization
+
+# Run creation tests only
+npm run test:creation
 
 # Generate reference hashes (requires original tools)
 npm run generate
@@ -551,6 +571,8 @@ Reference hashes are preserved permanently:
 - test_hashes/tools/extraction/our_hashes.json
 - test_hashes/tools/optimization/original_hashes.json
 - test_hashes/tools/optimization/our_hashes.json
+- test_hashes/tools/creation/original_hashes.json
+- test_hashes/tools/creation/our_hashes.json
 
 Our tool outputs are updated on each test run.
 

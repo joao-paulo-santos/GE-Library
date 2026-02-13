@@ -102,7 +102,8 @@ Extracted folders contain:
 ge-library/
 ├── tools/              # Binary executables
 │   ├── ipf-extractor (or .exe)
-│   └── ipf-optimizer (or .exe)
+│   ├── ipf-optimizer (or .exe)
+│   └── ipf-creator (or .exe)
 ├── README.txt          # User documentation
 └── PATCHNOTES.txt     # Release notes (last 5 releases)
 ```
@@ -202,9 +203,16 @@ Granado Espada's IPF system suffers from progressive file bloat:
 │   │   ├── ipf_extractor.py    # Main extraction tool
 │   │   └── tests/               # Test suite and validation tools
 │   └── golang/                  # Go production implementation
-│       ├── cmd/ipf-extractor/   # CLI application
+│       ├── cmd/
+│       │   ├── ipf-extractor/   # Extraction CLI
+│       │   ├── ipf-optimizer/   # Optimization CLI
+│       │   └── ipf-creator/     # Creation CLI
 │       ├── pkg/ipf/             # Core IPF extraction logic
-│       └── pkg/zipcipher/       # ZIP decryption implementation
+│       ├── pkg/zipcipher/       # ZIP decryption implementation
+│       ├── pkg/zipwriter/       # ZIP writing utilities
+│       ├── pkg/optimize/        # IPF optimization
+│       ├── pkg/creator/         # IPF creation
+│       └── pkg/workers/         # Parallel processing
 ├── testing/                     # Testing framework
 │   ├── src/                    # Framework source code (modular architecture)
 │   ├── test_files/             # IPF test files
