@@ -177,11 +177,11 @@ func runExtraction(config *Config) error {
 
 	// Print header
 	if !config.Quiet {
-		fmt.Printf("🚀 %s v%s\n", AppName, AppVersion)
-		fmt.Printf("📁 Input: %s\n", config.InputFile)
-		fmt.Printf("📂 Output: %s\n", config.OutputDir)
-		fmt.Printf("🔧 Workers: %d\n", config.WorkerCount)
-		fmt.Printf("📦 Batch Size: %d\n", config.BatchSize)
+		fmt.Printf("%s v%s\n", AppName, AppVersion)
+		fmt.Printf("Input: %s\n", config.InputFile)
+		fmt.Printf("Output: %s\n", config.OutputDir)
+		fmt.Printf("Workers: %d\n", config.WorkerCount)
+		fmt.Printf("Batch Size: %d\n", config.BatchSize)
 		fmt.Printf("\n")
 	}
 
@@ -189,7 +189,7 @@ func runExtraction(config *Config) error {
 	var ipfReadTime, filenameReadTime, decryptTime, extractTime time.Duration
 
 	// Step 1: Open IPF file
-	printStep(config, "📖 Reading IPF file structure...")
+	printStep(config, "Reading IPF file structure...")
 	ipfStart := time.Now()
 	reader, err := ipf.NewIPFReader(config.InputFile)
 	if err != nil {
@@ -209,7 +209,7 @@ func runExtraction(config *Config) error {
 	}
 
 	// Step 3: Read encrypted filenames
-	printStep(config, "🔐 Reading encrypted filenames...")
+	printStep(config, "Reading encrypted filenames...")
 	filenameReadStart := time.Now()
 	if err := reader.ReadEncryptedFilenames(); err != nil {
 		return fmt.Errorf("failed to read encrypted filenames: %w", err)
@@ -220,7 +220,7 @@ func runExtraction(config *Config) error {
 	fileInfos := reader.GetFileInfos()
 
 	// Step 4: Parallel filename decryption
-	printStep(config, "🔓 Decrypting filenames...")
+	printStep(config, "Decrypting filenames...")
 	password := zipcipher.GetIPFPassword()
 	decryptor := ipf.NewFilenameDecryptor(password, config.WorkerCount)
 
@@ -245,13 +245,13 @@ func runExtraction(config *Config) error {
 		fmt.Printf("   Decrypted %d/%d filenames (%.1f%%) in %.2fs\n",
 			successCount, fileCount, successRate, decryptTime.Seconds())
 		if successRate < 100.0 {
-			fmt.Printf("   ⚠️  %.1f%% filenames could not be decrypted\n", 100.0-successRate)
+			fmt.Printf("   WARNING: %.1f%% filenames could not be decrypted\n", 100.0-successRate)
 		}
 	}
 
 	// Step 5: Validate if requested
 	if config.ValidateOnly {
-		printStep(config, "✅ Validation complete!")
+		printStep(config, "Validation complete!")
 		fmt.Printf("   IPF file is valid and contains %d files\n", fileCount)
 		fmt.Printf("   Successfully decrypted %d filenames (%.1f%%)\n", successCount, successRate)
 
@@ -264,7 +264,7 @@ func runExtraction(config *Config) error {
 	}
 
 	// Step 6: Extract files
-	printStep(config, "📦 Extracting files...")
+	printStep(config, "Extracting files...")
 	var extractionResults []ipf.ExtractionResult
 
 	// Get IPF password for extraction
@@ -282,7 +282,7 @@ func runExtraction(config *Config) error {
 	stats := ipf.CalculateStats(extractionResults, extractTime.Milliseconds())
 
 	// Print final results
-	printStep(config, "🎉 Extraction complete!")
+	printStep(config, "Extraction complete!")
 
 	if !config.Quiet {
 		fmt.Printf("   Files extracted: %d/%d (%.1f%%)\n",
@@ -302,24 +302,24 @@ func runExtraction(config *Config) error {
 			}
 		}
 
-		fmt.Printf("\n💡 Files saved to: %s\n", config.OutputDir)
+		fmt.Printf("\nFiles saved to: %s\n", config.OutputDir)
 		if stats.SuccessRate >= 95.0 {
-			fmt.Printf("✅ Extraction completed successfully (%.1f%% success rate)\n", stats.SuccessRate)
+			fmt.Printf("Extraction completed successfully (%.1f%% success rate)\n", stats.SuccessRate)
 		} else if stats.SuccessRate >= 80.0 {
-			fmt.Printf("⚠️  Extraction completed with some issues (%.1f%% success rate)\n", stats.SuccessRate)
+			fmt.Printf("Extraction completed with some issues (%.1f%% success rate)\n", stats.SuccessRate)
 		} else {
-			fmt.Printf("❌ Extraction completed with many failures (%.1f%% success rate)\n", stats.SuccessRate)
+			fmt.Printf("Extraction completed with many failures (%.1f%% success rate)\n", stats.SuccessRate)
 		}
 
 		// Print simple timing summary
 		if !config.Quiet {
 			totalTime := time.Since(totalStartTime)
-			fmt.Printf("\n⏱️  Timing Summary:\n")
-			fmt.Printf("   📖 IPF Structure Reading:        %.3fs\n", ipfReadTime.Seconds())
-			fmt.Printf("   🔐 Filename Reading:             %.3fs\n", filenameReadTime.Seconds())
-			fmt.Printf("   🔓 Filename Decryption:          %.3fs\n", decryptTime.Seconds())
-			fmt.Printf("   📦 File Extraction:              %.3fs\n", extractTime.Seconds())
-			fmt.Printf("   🏁 Total Runtime:                 %.3fs\n", totalTime.Seconds())
+			fmt.Printf("\nTiming Summary:\n")
+			fmt.Printf("   IPF Structure Reading:        %.3fs\n", ipfReadTime.Seconds())
+			fmt.Printf("   Filename Reading:             %.3fs\n", filenameReadTime.Seconds())
+			fmt.Printf("   Filename Decryption:          %.3fs\n", decryptTime.Seconds())
+			fmt.Printf("   File Extraction:              %.3fs\n", extractTime.Seconds())
+			fmt.Printf("   Total Runtime:                 %.3fs\n", totalTime.Seconds())
 		}
 	}
 

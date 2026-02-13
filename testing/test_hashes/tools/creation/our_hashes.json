@@ -1,14 +1,10 @@
 {
-  "generated_at": "2026-02-13T16:39:41.065Z",
-  "purpose": "Reference hashes for IPF creation validation (extracted contents, not IPF file)",
-  "tool": "Original Windows tools (cz.exe + zi.exe) + our ipf-extractor",
+  "generated_at": "2026-02-13T19:08:21.141Z",
+  "purpose": "Hashes from our ipf-creator tool",
+  "tool": "ipf-creator (Go implementation)",
   "test_files": {
     "ui_creation": {
-      "created_ipf": {
-        "source_ipf": "ui.ipf",
-        "size_bytes": 441422642,
-        "file_count": 11568
-      },
+      "test_file": "ui.ipf creation",
       "extracted_files": {
         "strategy": "sampling",
         "file_count": 11568,
@@ -197,7 +193,7 @@
         },
         "sample_hash": "e3f58add1979b69b2fbbb7e55c6b06b95956a8b9a487573a1dc117a7e9e52f59"
       },
-      "timestamp": "2026-02-13T16:41:12.189Z"
+      "timestamp": "2026-02-13T19:08:35.313Z"
     }
   }
 }

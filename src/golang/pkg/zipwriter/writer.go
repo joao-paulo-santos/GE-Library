@@ -7,7 +7,9 @@ import (
 	"github.com/joao-paulo-santos/GE-Library/pkg/ipf"
 )
 
-func WriteLocalFileHeader(w io.Writer, file *ipf.FileInfo, genPurpose uint16) error {
+// WriteLocalFileHeaderFromIPF writes a local file header using ipf.FileInfo struct.
+// Use this when writing from existing IPF data (e.g., optimizer).
+func WriteLocalFileHeaderFromIPF(w io.Writer, file *ipf.FileInfo, genPurpose uint16) error {
 	header := make([]byte, 30)
 
 	binary.LittleEndian.PutUint32(header[0:4], 0x04034b50)
@@ -41,7 +43,45 @@ func WriteLocalFileHeader(w io.Writer, file *ipf.FileInfo, genPurpose uint16) er
 	return nil
 }
 
-func WriteCentralDirectoryEntry(w io.Writer, file *ipf.FileInfo, localHeaderOffset uint64, versionMadeBy uint16, genPurpose uint16) error {
+// WriteLocalFileHeaderFromParams writes a local file header using individual parameters.
+// Use this when building new archives from scratch (e.g., creator).
+func WriteLocalFileHeaderFromParams(w io.Writer, versionNeeded, genPurpose, method, modifiedTime, modifiedDate uint16, crc32 uint32, compressedSize, uncompressedSize uint64, encryptedNameLen, extraLen uint16, encryptedFilename, extraField []byte) error {
+	header := make([]byte, 30)
+
+	binary.LittleEndian.PutUint32(header[0:4], 0x04034b50)
+	binary.LittleEndian.PutUint16(header[4:6], versionNeeded)
+	binary.LittleEndian.PutUint16(header[6:8], genPurpose)
+	binary.LittleEndian.PutUint16(header[8:10], method)
+	binary.LittleEndian.PutUint16(header[10:12], modifiedTime)
+	binary.LittleEndian.PutUint16(header[12:14], modifiedDate)
+	binary.LittleEndian.PutUint32(header[14:18], crc32)
+	binary.LittleEndian.PutUint32(header[18:22], uint32(compressedSize))
+	binary.LittleEndian.PutUint32(header[22:26], uint32(uncompressedSize))
+	binary.LittleEndian.PutUint16(header[26:28], encryptedNameLen)
+	binary.LittleEndian.PutUint16(header[28:30], extraLen)
+
+	if _, err := w.Write(header); err != nil {
+		return err
+	}
+
+	if len(encryptedFilename) > 0 {
+		if _, err := w.Write(encryptedFilename); err != nil {
+			return err
+		}
+	}
+
+	if len(extraField) > 0 {
+		if _, err := w.Write(extraField); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// WriteCentralDirectoryEntryFromIPF writes a central directory entry using ipf.FileInfo struct.
+// Use this when writing from existing IPF data (e.g., optimizer).
+func WriteCentralDirectoryEntryFromIPF(w io.Writer, file *ipf.FileInfo, localHeaderOffset uint64, versionMadeBy uint16, genPurpose uint16) error {
 	header := make([]byte, 46)
 
 	binary.LittleEndian.PutUint32(header[0:4], 0x02014b50)
@@ -75,6 +115,49 @@ func WriteCentralDirectoryEntry(w io.Writer, file *ipf.FileInfo, localHeaderOffs
 
 	if len(file.ExtraField) > 0 {
 		if _, err := w.Write(file.ExtraField); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// WriteCentralDirectoryEntryFromParams writes a central directory entry using individual parameters.
+// Use this when building new archives from scratch (e.g., creator).
+func WriteCentralDirectoryEntryFromParams(w io.Writer, versionNeeded, versionMadeBy, genPurpose, method, modifiedTime, modifiedDate uint16, crc32 uint32, compressedSize, uncompressedSize uint64, encryptedNameLen, extraLen uint16, encryptedFilename, extraField []byte, localHeaderOffset uint64) error {
+	header := make([]byte, 46)
+
+	binary.LittleEndian.PutUint32(header[0:4], 0x02014b50)
+	binary.LittleEndian.PutUint16(header[4:6], versionMadeBy)
+
+	binary.LittleEndian.PutUint16(header[6:8], versionNeeded)
+	binary.LittleEndian.PutUint16(header[8:10], genPurpose)
+	binary.LittleEndian.PutUint16(header[10:12], method)
+	binary.LittleEndian.PutUint16(header[12:14], modifiedTime)
+	binary.LittleEndian.PutUint16(header[14:16], modifiedDate)
+	binary.LittleEndian.PutUint32(header[16:20], crc32)
+	binary.LittleEndian.PutUint32(header[20:24], uint32(compressedSize))
+	binary.LittleEndian.PutUint32(header[24:28], uint32(uncompressedSize))
+	binary.LittleEndian.PutUint16(header[28:30], encryptedNameLen)
+	binary.LittleEndian.PutUint16(header[30:32], extraLen)
+	binary.LittleEndian.PutUint16(header[32:34], 0)
+	binary.LittleEndian.PutUint16(header[34:36], 0)
+	binary.LittleEndian.PutUint16(header[36:38], 0)
+	binary.LittleEndian.PutUint32(header[38:42], 0)
+	binary.LittleEndian.PutUint32(header[42:46], uint32(localHeaderOffset))
+
+	if _, err := w.Write(header); err != nil {
+		return err
+	}
+
+	if len(encryptedFilename) > 0 {
+		if _, err := w.Write(encryptedFilename); err != nil {
+			return err
+		}
+	}
+
+	if len(extraField) > 0 {
+		if _, err := w.Write(extraField); err != nil {
 			return err
 		}
 	}

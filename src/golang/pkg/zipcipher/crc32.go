@@ -49,6 +49,6 @@ var CRC32Table = [256]uint32{
 }
 
 // UpdateCRC32 updates a CRC32 value with a new byte
-func UpdateCRC32(crc uint32, val byte) uint32 {
+func updateCRC32(crc uint32, val byte) uint32 {
 	return CRC32Table[(crc^uint32(val))&0xFF] ^ (crc >> 8)
 }

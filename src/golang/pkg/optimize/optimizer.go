@@ -129,7 +129,7 @@ func createOptimizedIPF(originalIPFPath, outputPath string, retained []ipf.FileI
 		file := &retained[i]
 		localHeaderOffsets[i] = currentOffset
 
-		if err := zipwriter.WriteLocalFileHeader(outputFile, file, 0x0009); err != nil {
+		if err := zipwriter.WriteLocalFileHeaderFromIPF(outputFile, file, 0x0009); err != nil {
 			return fmt.Errorf("failed to write local header for file %d: %w", i, err)
 		}
 
@@ -151,7 +151,7 @@ func createOptimizedIPF(originalIPFPath, outputPath string, retained []ipf.FileI
 		file := &retained[i]
 		localHeaderOffset := localHeaderOffsets[i]
 
-		if err := zipwriter.WriteCentralDirectoryEntry(outputFile, file, localHeaderOffset, 0x0014, 0x0009); err != nil {
+		if err := zipwriter.WriteCentralDirectoryEntryFromIPF(outputFile, file, localHeaderOffset, 0x0014, 0x0009); err != nil {
 			return fmt.Errorf("failed to write central directory entry for file %d: %w", i, err)
 		}
 

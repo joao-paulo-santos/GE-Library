@@ -41,9 +41,7 @@
 # ============================================
 
 # Exclude proprietary IPF files (DO NOT UPLOAD)
-testing/test_files/
-testing/reference_original/
-testing/reference_our/
+testing/temp/
 testing/**/*.ipf
 testing/**/*.zip
 
