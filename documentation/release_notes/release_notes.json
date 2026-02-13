@@ -18,6 +18,24 @@
         "UI/launcher not yet included (command-line only)",
         "Automatic updater not yet implemented"
       ]
+    },
+    {
+      "version": "0.2",
+      "date": "2026-02-13",
+      "type": "Feature Release",
+      "changes": [
+        "IPF Creator: Create IPF archives from folders (replicates cz.exe + zi.exe)",
+        "Single-pass creation workflow (folder to IPF directly)",
+        "Optional filename encryption (IPF format) or plain ZIP",
+        "Configurable compression level (0-9)",
+        "Code quality improvements and dead code removal",
+        "Improved function naming in zipwriter package"
+      ],
+      "performance": "Faster than original two-step cz.exe + zi.exe workflow",
+      "known_issues": [
+        "UI/launcher not yet included (command-line only)",
+        "Automatic updater not yet implemented"
+      ]
     }
   ],
   "github_url": "https://github.com/joao-paulo-santos/GE-Library"
