@@ -262,8 +262,7 @@ func (c *Creator) createEncryptedZIP(fileInfos []FileInfo) error {
 		encryptedFilename := EncryptFilename(plaintextFilename, c.Password)
 		encryptedFilenameLen := uint16(len(encryptedFilename))
 
-		modTimeHighByte := byte(modTime >> 8)
-		encryptedData, err := EncryptData(compressedData, c.Password, modTimeHighByte)
+		encryptedData, err := EncryptData(compressedData, c.Password, crc32Val)
 		if err != nil {
 			return fmt.Errorf("failed to encrypt data: %w", err)
 		}

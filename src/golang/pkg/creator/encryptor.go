@@ -22,15 +22,21 @@ func EncryptFilename(plaintext string, password []byte) []byte {
 	return encrypted
 }
 
-func EncryptData(plaintext []byte, password []byte, modTimeHighByte byte) ([]byte, error) {
+func EncryptData(plaintext []byte, password []byte, crc32Val uint32) ([]byte, error) {
 	cipher := &zipcipher.ZipCipher{}
 	cipher.InitKeys(password)
 
 	header := make([]byte, 12)
-	if _, err := rand.Read(header[:11]); err != nil {
+	if _, err := rand.Read(header[:10]); err != nil {
 		return nil, fmt.Errorf("failed to generate random header: %w", err)
 	}
-	header[11] = modTimeHighByte
+	for i := 0; i < 10; i++ {
+		if header[i] == 0 {
+			header[i] = 1
+		}
+	}
+	header[10] = byte((crc32Val >> 16) & 0xff)
+	header[11] = byte((crc32Val >> 24) & 0xff)
 
 	result := make([]byte, 12+len(plaintext))
 

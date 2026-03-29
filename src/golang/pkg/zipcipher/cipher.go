@@ -1,6 +1,7 @@
 package zipcipher
 
 import (
+	"strings"
 	"unicode/utf8"
 )
 
@@ -144,20 +145,21 @@ func isValidFilename(filename string) bool {
 	return float64(validCharCount)/float64(len(filename)) >= 0.8
 }
 
-// MakeSafeFilename creates a safe filename for filesystem storage
+// MakeSafeFilename creates a safe filename for filesystem storage.
+// Converts to lowercase and replaces invalid characters with underscores.
 func MakeSafeFilename(filename string) string {
 	if len(filename) == 0 {
 		return "unnamed_file"
 	}
 
-	// Replace invalid characters with underscores
+	filename = strings.ToLower(filename)
+
 	safe := make([]rune, 0, len(filename))
 	for _, r := range filename {
-		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') ||
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') ||
 			r == '_' || r == '-' || r == '.' || r == '/' || r == ' ' {
 			safe = append(safe, r)
 		} else if r == '\\' {
-			// Convert Windows backslashes to Unix forward slashes for cross-platform compatibility
 			safe = append(safe, '/')
 		} else {
 			safe = append(safe, '_')
@@ -166,7 +168,6 @@ func MakeSafeFilename(filename string) string {
 
 	result := string(safe)
 
-	// Ensure the filename is not empty
 	if len(result) == 0 {
 		return "unnamed_file"
 	}

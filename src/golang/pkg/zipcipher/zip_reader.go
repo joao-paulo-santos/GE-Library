@@ -111,50 +111,55 @@ func (lh *LocalFileHeader) IsEncrypted() bool {
 	return (lh.BitFlag & 0x1) != 0
 }
 
+// IsDataDescriptor checks if the file uses a data descriptor
+func (ef *EncryptedFileReader) IsDataDescriptor() bool {
+	return (ef.header.BitFlag & 0x8) != 0
+}
+
+// CryptCheck verifies the 12-byte encryption header against the password.
+// For data descriptor files: checks byte 11 against modTime >> 8.
+// Otherwise: checks byte 11 against crc32 >> 24.
+// Returns the last decrypted header byte (for chaining) and whether verification passed.
+func (ef *EncryptedFileReader) CryptCheck(headerBytes []byte) (byte, bool) {
+	ef.cipher.InitKeys(ef.password)
+
+	var b byte
+	for i := 0; i < len(headerBytes); i++ {
+		b = headerBytes[i]
+		decrypted := ef.cipher.DecryptByte(b)
+		ef.cipher.UpdateCipher(decrypted)
+		b = decrypted
+	}
+
+	if ef.IsDataDescriptor() {
+		return b, byte(ef.header.LastModTime>>8) == b
+	}
+	return b, byte(ef.header.CRC32>>24) == b
+}
+
 // ReadEncryptedData reads and decrypts the file data
 func (ef *EncryptedFileReader) ReadEncryptedData() ([]byte, error) {
 	if !ef.IsEncrypted() {
-		// Not encrypted, read directly
 		return ef.ReadCompressedData()
 	}
 
-	// For encrypted files, we need to read and decrypt the data
 	compressedData, err := ef.ReadCompressedData()
 	if err != nil {
 		return nil, err
 	}
 
-	// Initialize cipher with password for data decryption
-	ef.cipher.InitKeys(ef.password)
-
-	// Skip the encryption header (first 12 bytes)
 	if len(compressedData) < 12 {
 		return nil, errors.New("encrypted data too short for encryption header")
 	}
 
-	// Verify the encryption header
 	headerBytes := compressedData[:12]
-	decryptedHeader := ef.cipher.DecryptData(headerBytes)
-
-	// The last byte of the decrypted header should match the high byte of the file time
-	expectedByte := byte(ef.header.LastModTime >> 8)
-	if decryptedHeader[11] != expectedByte {
-		// Try with alternate password interpretation
-		return nil, fmt.Errorf("password verification failed (expected 0x%02x, got 0x%02x)",
-			expectedByte, decryptedHeader[11])
+	_, verified := ef.CryptCheck(headerBytes)
+	if !verified {
+		return nil, fmt.Errorf("password verification failed for encrypted file")
 	}
 
-	// Decrypt the actual data
 	actualData := compressedData[12:]
 	decryptedData := ef.cipher.DecryptData(actualData)
-
-	// Update CRC32 for verification if needed
-	if ef.header.CRC32 != 0 {
-		calculatedCRC := crc32.ChecksumIEEE(decryptedData)
-		if calculatedCRC != ef.header.CRC32 {
-			// This might be due to compression, so we'll check after decompression
-		}
-	}
 
 	return decryptedData, nil
 }

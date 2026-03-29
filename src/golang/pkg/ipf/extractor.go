@@ -121,21 +121,18 @@ func (ce *ConcurrentExtractor) extractWithCustomDecryption(task ExtractionTask) 
 		return nil, fmt.Errorf("failed to read compressed data: %w", err)
 	}
 
-	// If the file is encrypted, decrypt the data skipping the verification step
+	// If the file is encrypted, decrypt the data with password verification
 	if header.IsEncrypted() {
 		if len(compressedData) < 12 {
 			return nil, errors.New("encrypted data too short for encryption header")
 		}
 
-		// Initialize cipher with password
 		ef := encryptedReader
-		ef.InitCipher()
+		_, verified := ef.CryptCheck(compressedData[:12])
+		if !verified {
+			return nil, fmt.Errorf("password verification failed for file at index %d", task.Index)
+		}
 
-		// Decrypt and skip the 12-byte header
-		headerBytes := compressedData[:12]
-		ef.DecryptHeader(headerBytes) // Decrypt but don't verify
-
-		// Decrypt the actual data
 		actualData := compressedData[12:]
 		decryptedData := ef.DecryptData(actualData)
 		compressedData = decryptedData
